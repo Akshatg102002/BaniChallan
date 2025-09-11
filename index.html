@@ -1,0 +1,1714 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Challan & GRN ERP System</title>
+    <link rel="icon" type="image/png"
+        href="//baniwomen.com/cdn/shop/files/baniwomen-icon.png?crop=center&height=32&v=1706881484&width=32">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <style>
+        body {
+            background-color: #f0f2f5;
+        }
+
+        .container {
+            max-width: 1600px;
+        }
+
+        .card {
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.05);
+            border-radius: 0;
+        }
+
+        .nav-link.active {
+            background-color: #0d6efd !important;
+            color: white !important;
+        }
+
+        #records-tab-content .nav-link.active {
+            background-color: #f0f2f5 !important;
+            color: #0d6efd !important;
+            border-bottom: 2px solid #0d6efd;
+            border-radius: 0;
+        }
+
+        .form-control,
+        .form-select,
+        .btn {
+            border-radius: 0;
+        }
+
+        .progress-bar-container {
+            height: 15px;
+            background-color: #e9ecef;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background-color: #0d6efd;
+        }
+
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1050;
+            visibility: hidden;
+            opacity: 0;
+            transition: visibility 0s, opacity 0.5s linear;
+        }
+
+        #loading-overlay.visible {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+
+            #print-area,
+            #print-area * {
+                visibility: visible;
+            }
+
+            #print-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+
+            .no-print {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="loading-overlay">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+
+    <div class="container my-5">
+        <h1 class="text-center mb-5">Bani Challan & GRN Management</h1>
+        <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="pills-challan-tab" data-bs-toggle="pill"
+                    data-bs-target="#pills-challan" type="button" role="tab" aria-controls="pills-challan"
+                    aria-selected="true">Issue Challan</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="pills-grn-tab" data-bs-toggle="pill" data-bs-target="#pills-grn"
+                    type="button" role="tab" aria-controls="pills-grn" aria-selected="false">Receive GRN</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="pills-records-tab" data-bs-toggle="pill" data-bs-target="#pills-records"
+                    type="button" role="tab" aria-controls="pills-records" aria-selected="false">View Records</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="pills-refresh-tab" type="button" role="tab" aria-selected="false"
+                    onclick="window.location.reload();">Refresh</button>
+            </li>
+        </ul>
+
+
+        <div class="tab-content" id="pills-tabContent">
+            <div class="tab-pane fade show active" id="pills-challan" role="tabpanel"
+                aria-labelledby="pills-challan-tab" tabindex="0">
+                <div class="card p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h2 class="h4">Create New Challan</h2>
+                        <button class="btn btn-secondary btn-sm" id="resetChallanForm">Reset Form</button>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="vendorNameChallan" class="form-label">Vendor Name</label>
+                        <input type="text" class="form-control" id="vendorNameChallan" placeholder="Enter vendor name">
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label for="challanNo" class="form-label">Challan No.</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="challanNo">
+                                <button class="btn btn-secondary" type="button" id="editChallanNoBtn">Edit</button>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="challanDate" class="form-label">Date</label>
+                            <input type="date" class="form-control" id="challanDate">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="totalQtyChallan" class="form-label">Total Quantity Issued</label>
+                            <input type="number" class="form-control" id="totalQtyChallan" value="0" readonly>
+                        </div>
+                    </div>
+
+                    <div id="challanItemsContainer" class="mb-4">
+                    </div>
+
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="showRateChallan">
+                        <label class="form-check-label" for="showRateChallan">Show Rate on Challan</label>
+                    </div>
+
+                    <div class="d-grid mb-3">
+                        <button class="btn btn-success" id="addNewChallanItem">Add New Item</button>
+                    </div>
+
+                    <div class="d-flex justify-content-end">
+                        <button class="btn btn-primary" id="issueChallanBtn">Issue Challan</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="pills-grn" role="tabpanel" aria-labelledby="pills-grn-tab" tabindex="0">
+                <div class="card p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h2 class="h4">Receive GRN</h2>
+                        <button class="btn btn-secondary btn-sm" id="resetGRNForm">Reset Form</button>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="grnType" class="form-label">GRN Type</label>
+                        <select class="form-select" id="grnType">
+                            <option value="fromChallan">Receive from Existing Challan</option>
+                            <option value="manual">Create GRN Manually</option>
+                        </select>
+                    </div>
+
+                    <div id="grnFromChallanFields">
+                        <div class="mb-3">
+                            <label for="challanSelect" class="form-label">Select Challan</label>
+                            <select class="form-select" id="challanSelect"></select>
+                        </div>
+                        <div id="selectedChallanDetails" class="mb-4"></div>
+                    </div>
+
+                    <div id="grnManualFields" style="display: none;">
+                        <div class="mb-3">
+                            <label for="challanRefNoManual" class="form-label">Challan Ref No.</label>
+                            <input type="text" class="form-control" id="challanRefNoManual"
+                                placeholder="Enter Challan Ref No. (Optional)">
+                        </div>
+                        <div class="mb-3">
+                            <label for="vendorNameGRN" class="form-label">Vendor Name</label>
+                            <input type="text" class="form-control" id="vendorNameGRN" placeholder="Enter vendor name">
+                        </div>
+                        <div class="mb-3">
+                            <label for="grnDate" class="form-label">Date</label>
+                            <input type="date" class="form-control" id="grnDate">
+                        </div>
+                        <div id="grnItemsContainer" class="mb-4"></div>
+                        <button class="btn btn-success mb-3" id="addNewGRNItem">Add New Item</button>
+                    </div>
+
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="showRateGRN" checked>
+                        <label class="form-check-label" for="showRateGRN">Show Rate on GRN</label>
+                    </div>
+
+                    <div class="d-flex justify-content-end">
+                        <button class="btn btn-primary" id="receiveGRNBtn">Receive GRN</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="pills-records" role="tabpanel" aria-labelledby="pills-records-tab"
+                tabindex="0">
+                <div class="card p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h2 class="h4">Records Management</h2>
+                        <div class="no-print">
+                            <button class="btn btn-secondary btn-sm" id="refreshRecords">Refresh Records</button>
+                            <button class="btn btn-info btn-sm text-white" id="exportRecords">Export Data</button>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-2">
+                            <div class="card p-3 text-center">
+                                <h5 class="h6 mb-0">Total Challans</h5>
+                                <h2 class="h4" id="totalChallans">0</h2>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="card p-3 text-center">
+                                <h5 class="h6 mb-0">Total GRNs</h5>
+                                <h2 class="h4" id="totalGrns">0</h2>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="card p-3 text-center">
+                                <h5 class="h6 mb-0">Total Quantity</h5>
+                                <h2 class="h4" id="totalQuantity">0</h2>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="card p-3 text-center">
+                                <h5 class="h6 mb-0">Total Amount</h5>
+                                <h2 class="h4" id="totalAmount">₹0.00</h2>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="card p-3 text-center">
+                                <h5 class="h6 mb-0">Pending</h5>
+                                <h2 class="h4" id="pendingChallans">0</h2>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="card p-3 text-center">
+                                <h5 class="h6 mb-0">Completed</h5>
+                                <h2 class="h4" id="completedChallans">0</h2>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h5 class="h6 mt-4">Advanced Filters & View Options</h5>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label for="recordsDateFilter" class="form-label">Date Range</label>
+                            <select class="form-select" id="recordsDateFilter">
+                                <option value="all">All Dates</option>
+                                <option value="today">Today</option>
+                                <option value="this_week">This Week</option>
+                                <option value="this_month">This Month</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="statusFilter" class="form-label">Status Filter</label>
+                            <select class="form-select" id="statusFilter">
+                                <option value="all">All Status</option>
+                                <option value="pending">Pending</option>
+                                <option value="partially_received">Partially Received</option>
+                                <option value="completed">Completed</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="recordsVendorFilter" class="form-label">Vendor Filter</label>
+                            <input type="text" class="form-control" id="recordsVendorFilter"
+                                placeholder="Search by vendor">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="recordsSkuFilter" class="form-label">SKU Filter</label>
+                            <input type="text" class="form-control" id="recordsSkuFilter" placeholder="Search by SKU">
+                        </div>
+                    </div>
+
+                    <ul class="nav nav-tabs" id="records-tab" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="challan-records-tab" data-bs-toggle="tab"
+                                data-bs-target="#challan-records" type="button" role="tab"
+                                aria-controls="challan-records" aria-selected="true">Challan Records</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="grn-records-tab" data-bs-toggle="tab"
+                                data-bs-target="#grn-records" type="button" role="tab" aria-controls="grn-records"
+                                aria-selected="false">GRN Records</button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content" id="records-tab-content">
+                        <div class="tab-pane fade show active" id="challan-records" role="tabpanel"
+                            aria-labelledby="challan-records-tab">
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover mt-3">
+                                    <thead>
+                                        <tr>
+                                            <th>Challan No.</th>
+                                            <th>Vendor</th>
+                                            <th>Date</th>
+                                            <th>Items</th>
+                                            <th>Total Qty</th>
+                                            <th>Total Amount</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="challanRecordsTableBody">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="tab-pane fade" id="grn-records" role="tabpanel" aria-labelledby="grn-records-tab">
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover mt-3">
+                                    <thead>
+                                        <tr>
+                                            <th>GRN No.</th>
+                                            <th>Challan Ref</th>
+                                            <th>Vendor</th>
+                                            <th>Date</th>
+                                            <th>Items</th>
+                                            <th>Total Qty</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="grnRecordsTableBody">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="print-area"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, getDocs, runTransaction, FieldValue, deleteField } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Log level for debugging Firestore
+        setLogLevel('debug');
+
+        // Firebase Configuration (from user prompt)
+        const firebaseConfig = {
+            apiKey: "AIzaSyD_rxbXIux1dsFWLLMcNFRPM30NDJQGYnE",
+            authDomain: "banichallan.firebaseapp.com",
+            databaseURL: "https://banichallan-default-rtdb.firebaseio.com",
+            projectId: "banichallan",
+            storageBucket: "banichallan.appspot.com",
+            messagingSenderId: "107952696838",
+            appId: "1:107952696838:web:053637201db41ddf95dd87",
+            measurementId: "G-68Y0SYY8FM"
+        };
+
+        // Canvas-provided global variables
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfigFromCanvas = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : firebaseConfig;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfigFromCanvas);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        let userId = null;
+        let challanUnsubscribe = null;
+        let grnUnsubscribe = null;
+
+        async function authenticateUser() {
+            try {
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                userId = auth.currentUser.uid;
+                console.log("User authenticated with ID:", userId);
+            } catch (error) {
+                console.error("Firebase authentication failed:", error);
+            }
+        }
+
+        let lastChallanNumber = null;
+        let lastGrnNumber = null;
+
+        function getChallanCollectionRef() {
+            return collection(db, `/artifacts/${appId}/public/data/challans`);
+        }
+
+        function getGrnCollectionRef() {
+            return collection(db, `/artifacts/${appId}/public/data/grns`);
+        }
+
+        function generateNextChallanNumber(lastNumber) {
+            const today = new Date();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            const prefix = `${month}${day}`;
+            let serial = 1;
+
+            if (lastNumber && lastNumber.startsWith(prefix)) {
+                serial = parseInt(lastNumber.slice(-2), 10) + 1;
+            }
+            return `${prefix}${String(serial).padStart(2, '0')}`;
+        }
+
+        function generateNextGrnNumber(lastNumber) {
+            let serial = 1;
+            if (lastNumber && lastNumber.startsWith('GRN')) {
+                serial = parseInt(lastNumber.slice(3), 10) + 1;
+            }
+            return `GRN${String(serial).padStart(4, '0')}`;
+        }
+
+        async function getDocumentCounters() {
+            const counterDocRef = doc(db, `/artifacts/${appId}/public/data/counters/main`);
+            const counterDoc = await getDoc(counterDocRef);
+            if (counterDoc.exists()) {
+                const data = counterDoc.data();
+                lastChallanNumber = data.lastChallanNumber || null;
+                lastGrnNumber = data.lastGrnNumber || null;
+            }
+        }
+
+        async function updateChallanCounter(newNumber) {
+            const counterDocRef = doc(db, `/artifacts/${appId}/public/data/counters/main`);
+            await setDoc(counterDocRef, { lastChallanNumber: newNumber }, { merge: true });
+        }
+
+        async function updateGrnCounter(newNumber) {
+            const counterDocRef = doc(db, `/artifacts/${appId}/public/data/counters/main`);
+            await setDoc(counterDocRef, { lastGrnNumber: newNumber }, { merge: true });
+        }
+
+        function showLoading() {
+            document.getElementById('loading-overlay').classList.add('visible');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading-overlay').classList.remove('visible');
+        }
+
+        function updateTotalChallanQuantity() {
+            let total = 0;
+            document.querySelectorAll('#challanItemsContainer .item-row').forEach(row => {
+                row.querySelectorAll('.size-qty-input').forEach(input => {
+                    const qty = parseInt(input.value, 10) || 0;
+                    total += qty;
+                });
+            });
+            document.getElementById('totalQtyChallan').value = total;
+        }
+
+        function createSizeInput(container, sizeName = '', value = 0, isGrnInput = false, issuedQty = 0) {
+            const col = document.createElement('div');
+            col.classList.add('col-6', 'col-sm-4', 'col-md-2');
+
+            // Use different classes for GRN vs Challan inputs
+            const inputClass = isGrnInput ? 'grn-qty-input' : 'size-qty-input';
+
+            let labelHtml = `<label class="form-label">${sizeName}</label>`;
+            let inputHtml = '';
+
+            if (isGrnInput) {
+                // For GRN, show issued and received quantities
+                inputHtml = `
+                <input type="number" class="form-control challan-qty-input" data-size="${sizeName}" value="${issuedQty}" readonly>
+                <input type="number" class="form-control grn-qty-input mt-1" data-size="${sizeName}" placeholder="Rec Qty" value="${value}">
+            `;
+            } else {
+                // For Challan, just show the input field
+                inputHtml = `<input type="number" class="form-control size-qty-input" data-size="${sizeName}" value="${value}">`;
+            }
+
+            col.innerHTML = `
+            ${labelHtml}
+            ${inputHtml}
+        `;
+
+            if (!isGrnInput) {
+                // Only attach listener for Challan forms
+                col.querySelector('.size-qty-input').addEventListener('input', updateTotalChallanQuantity);
+            }
+
+            container.appendChild(col);
+        }
+
+        function createItemForm(container, isGRN = false, itemData = null, challanItemData = null) {
+            const itemRow = document.createElement('div');
+            itemRow.classList.add('card', 'p-3', 'mb-3', 'item-row');
+
+            const itemIndex = container.querySelectorAll('.item-row').length + 1;
+
+            let sizeInputsHtml = '';
+            const sizesToDisplay = new Set();
+            const defaultSizes = ["XS", "S", "M", "L", "XL", "XXL"];
+
+            // Add sizes from existing data if editing
+            if (itemData && itemData.sizes) {
+                Object.keys(itemData.sizes).forEach(size => sizesToDisplay.add(size));
+            }
+            if (isGRN && itemData && itemData.receivedSizes) {
+                Object.keys(itemData.receivedSizes).forEach(size => sizesToDisplay.add(size));
+            }
+
+            // Add default sizes if not already present
+            defaultSizes.forEach(size => sizesToDisplay.add(size));
+
+            sizesToDisplay.forEach(size => {
+                let sizeValue = 0;
+                let issuedQty = 0;
+                if (itemData) {
+                    if (isGRN) {
+                        sizeValue = itemData.receivedSizes ? itemData.receivedSizes[size] || 0 : 0;
+                        if (challanItemData && challanItemData.sizes) {
+                            issuedQty = challanItemData.sizes[size] || 0;
+                        }
+                    } else {
+                        sizeValue = itemData.sizes ? itemData.sizes[size] || 0 : 0;
+                    }
+                }
+
+                if (isGRN) {
+                    sizeInputsHtml += `
+                        <div class="col-6 col-sm-4 col-md-2">
+                            <label class="form-label">${size}</label>
+                            <input type="number" class="form-control challan-qty-input" data-size="${size}" value="${issuedQty}" readonly>
+                            <input type="number" class="form-control grn-qty-input mt-1" data-size="${size}" placeholder="Rec Qty" value="${sizeValue}">
+                        </div>
+                    `;
+                } else {
+                    sizeInputsHtml += `
+                        <div class="col-6 col-sm-4 col-md-2">
+                            <label class="form-label">${size}</label>
+                            <input type="number" class="form-control size-qty-input" data-size="${size}" value="${sizeValue}">
+                        </div>
+                    `;
+                }
+            });
+
+            itemRow.innerHTML = `
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="h6">Item ${itemIndex}</h5>
+                <button type="button" class="btn btn-danger btn-sm remove-item">Remove</button>
+            </div>
+            <div class="row g-3">
+                <div class="col-md-6 col-lg-3">
+                    <label class="form-label">SKU Code</label>
+                    <input type="text" class="form-control item-sku" placeholder="SKU Code" value="${itemData ? itemData.sku : ''}">
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <label class="form-label">Color</label>
+                    <input type="text" class="form-control item-color" placeholder="Color" value="${itemData ? itemData.color : ''}">
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <label class="form-label">Type</label>
+                    <input type="text" class="form-control item-type" placeholder="Type" value="${itemData ? itemData.type : ''}">
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <label class="form-label">Rate</label>
+                    <input type="number" class="form-control item-rate" value="${itemData ? itemData.rate : 1}" step="0.01">
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <label class="form-label">Remarks</label>
+                    <input type="text" class="form-control item-remarks" placeholder="Remarks" value="${itemData ? itemData.remarks : ''}">
+                </div>
+            </div>
+            <div class="mt-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <label class="form-label mb-0">Size-wise Quantities</label>
+                    <button class="btn btn-secondary btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#addSizeModal">Add Size</button>
+                </div>
+                <div class="row g-2 size-qty-container">
+                    ${sizeInputsHtml}
+                </div>
+            </div>
+        `;
+
+            if (isGRN) {
+                if (challanItemData) {
+                    itemRow.querySelector('.remove-item').style.display = 'none';
+                }
+                itemRow.querySelectorAll('.grn-qty-input').forEach(input => {
+                    input.addEventListener('input', () => {
+                        let total = 0;
+                        document.querySelectorAll('#grnItemsContainer .grn-qty-input').forEach(i => {
+                            total += parseInt(i.value, 10) || 0;
+                        });
+                        // Update total GRN quantity if needed
+                    });
+                });
+            } else {
+                itemRow.querySelector('.remove-item').addEventListener('click', () => {
+                    itemRow.remove();
+                    updateTotalChallanQuantity();
+                });
+                itemRow.querySelectorAll('.size-qty-input').forEach(input => {
+                    input.addEventListener('input', updateTotalChallanQuantity);
+                });
+            }
+
+            container.appendChild(itemRow);
+        }
+
+        function populatePrintArea(data, type, showRate = false) {
+            const printArea = document.getElementById('print-area');
+            let content = '';
+            const logoUrl = "https://baniwomen.com/cdn/shop/files/Bani_Women_Logo_-_Final.pdf_193_x_60_px_ff33a7dd-f461-448d-91d3-5282e4fd0fce.png";
+
+            if (type === 'challan') {
+                let challanItemsHtml = '';
+                let totalQtyIssued = 0;
+                let totalAmount = 0;
+
+                data.items.forEach((item) => {
+                    Object.entries(item.sizes).forEach(([size, qty]) => {
+                        if (qty > 0) {
+                            const itemAmount = qty * item.rate;
+                            totalQtyIssued += qty;
+                            totalAmount += itemAmount;
+
+                            challanItemsHtml += `
+                            <tr class="text-center">
+                                <td style="font-size: 10px;">${item.sku}</td>
+                                <td style="font-size: 10px;">${item.color}</td>
+                                <td style="font-size: 10px;">${item.type}</td>
+                                <td style="font-size: 10px;">${size}</td>
+                                <td style="font-size: 10px;">${qty}</td>
+                                ${showRate ? `<td style="font-size: 10px;">${item.rate}</td>` : ''}
+                                <td style="font-size: 10px;">${item.remarks}</td>
+                                <td style="font-size: 10px;">${showRate ? itemAmount.toFixed(2) : 'N/A'}</td>
+                            </tr>
+                        `;
+                        }
+                    });
+                });
+
+                content = `
+                <div class="p-5">
+                    <div class="text-center mb-5">
+                        <img src="${logoUrl}" alt="Company Logo" class="mb-3" style="max-height: 60px;" />
+                        <h1 class="h3 fw-bold">Chestaa Apparels India Pvt. Ltd.</h1>
+                        <p class="mb-0">Manufacture & Exporter of Fashion Garments</p>
+                        <p class="mb-0 text-small" style="font-size: 12px;font-weight:bold;">Plot no 72, 3rd floor, Bagdola, Near Radha Krishna Mandir, Sector 8, Dwarka, New Delhi 110077</p>
+                        <h2 class="h4 mt-4">Job Order Issue (Challan)</h2>
+                    </div>
+                    <div class="row g-3 mb-4">
+                        <div class="col-6">
+                            <strong>Challan No.:</strong> ${data.challanNo}
+                        </div>
+                        <div class="col-6">
+                            <strong>M/s:</strong> ${data.vendorName}
+                        </div>
+                        <div class="col-6">
+                            <strong>Dated:</strong> ${data.date}
+                        </div>
+                    </div>
+                   <table class="table table-bordered">
+                        <thead>
+                            <tr class="text-center">
+                                <th style="font-size: 10px;">SKU</th>
+                                <th style="font-size: 10px;">COLOR</th>
+                                <th style="font-size: 10px;">TYPE</th>
+                                <th style="font-size: 10px;">SIZE</th>
+                                <th style="font-size: 10px;">QTY.</th>
+                                ${showRate ? `<th style="font-size: 10px;">RATE</th>` : ''}
+                                <th style="font-size: 10px;">REMARKS</th>
+                                <th style="font-size: 10px;">AMOUNT</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${challanItemsHtml}
+                        </tbody>
+                    </table>
+
+                    <div class="d-flex justify-content-end mt-4">
+                        <strong>Total Quantity Issued: ${totalQtyIssued}</strong>
+                        <strong class="ms-5">Total Amount: ₹${showRate ? totalAmount.toFixed(2) : 'N/A'}</strong>
+                    </div>
+                </div>
+            `;
+
+            } else if (type === 'grn') {
+                const showRate = document.getElementById('showRateGRN').checked;
+                let grnItemsHtml = '';
+                let totalQtyReceived = 0;
+                let totalAmount = 0;
+
+                data.items.forEach((item) => {
+                    Object.entries(item.receivedSizes).forEach(([size, qty]) => {
+                        if (qty > 0) {
+                            const itemAmount = qty * item.rate;
+                            totalQtyReceived += qty;
+                            totalAmount += itemAmount;
+
+                            grnItemsHtml += `
+                            <tr class="text-center">
+                                <td style="font-size: 10px;">${item.sku}</td>
+                                <td style="font-size: 10px;">${item.color}</td>
+                                <td style="font-size: 10px;">${item.type}</td>
+                                <td style="font-size: 10px;">${size}</td>
+                                <td style="font-size: 10px;">${qty}</td>
+                                ${showRate ? `<td style="font-size: 10px;">${item.rate}</td>` : ''}
+                                <td style="font-size: 10px;">${itemAmount.toFixed(2)}</td>
+                            </tr>
+                        `;
+                        }
+                    });
+                });
+
+                content = `
+                <div class="p-5">
+                    <div class="text-center mb-5">
+                        <img src="${logoUrl}" alt="Bani Women" class="mb-3" style="max-height: 60px;" />
+                        <h1 class="h3 fw-bold">Chestaa Apparels India Pvt. Ltd.</h1>
+                        <p class="mb-0">Manufacture & Exporter of Fashion Garments</p>
+                        <p class="mb-0 text-small" style="font-size: 12px;font-weight:bold;">Plot no 72, 3rd floor, Bagdola, Near Radha Krishna Mandir, Sector 8, Dwarka, New Delhi 110077</p>
+                        <h2 class="h4 mt-4">Goods Receipt Note (GRN)</h2>
+
+                    </div>
+                    <div class="row g-3 mb-4">
+                        <div class="col-6">
+                            <strong>GRN No.:</strong> ${data.grnNo}
+                        </div>
+                        <div class="col-6">
+                            <strong>Challan Ref No.:</strong> ${data.challanRefNo || 'N/A'}
+                        </div>
+                        <div class="col-6">
+                            <strong>M/s:</strong> ${data.vendorName}
+                        </div>
+                        <div class="col-6">
+                            <strong>Dated:</strong> ${data.date}
+                        </div>
+                    </div>
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr class="text-center">
+                                <th style="font-size: 10px;">SKU</th>
+                                <th style="font-size: 10px;">COLOR</th>
+                                <th style="font-size: 10px;">TYPE</th>
+                                <th style="font-size: 10px;">SIZE</th>
+                                <th style="font-size: 10px;">RECEIVED QTY.</th>
+                                ${showRate ? `<th style="font-size: 10px;">RATE</th>` : ''}
+                                <th style="font-size: 10px;">AMOUNT</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${grnItemsHtml}
+                        </tbody>
+                    </table>
+
+                    <div class="d-flex justify-content-end mt-4">
+                        <strong>Total Quantity Received: ${totalQtyReceived}</strong>
+                        <strong class="ms-5">Total Amount: ₹${totalAmount.toFixed(2)}</strong>
+                    </div>
+                    <p class="mt-5 text-center fst-italic">This is a digitally signed document and does not require a manual signature.</p>
+                </div>
+            `;
+            }
+
+            printArea.innerHTML = content;
+            window.print();
+        }
+
+        async function saveChallanToFirestore(challanData) {
+            showLoading();
+            const challanCollection = getChallanCollectionRef();
+            try {
+                await addDoc(challanCollection, challanData);
+                console.log("Challan saved successfully!");
+                const showRate = document.getElementById('showRateChallan').checked;
+                document.getElementById('resetChallanForm').click();
+                populatePrintArea(challanData, 'challan', showRate);
+            } catch (error) {
+                console.error("Error saving challan:", error);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function saveGRNToFirestore(grnData) {
+            showLoading();
+            const grnCollection = getGrnCollectionRef();
+            try {
+                await addDoc(grnCollection, grnData);
+                console.log("GRN saved successfully!");
+                document.getElementById('resetGRNForm').click();
+                populatePrintArea(grnData, 'grn');
+            } catch (error) {
+                console.error("Error saving GRN:", error);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function fetchChallansForGRN() {
+            showLoading();
+            const challanSelect = document.getElementById('challanSelect');
+            challanSelect.innerHTML = '<option value="">-- Select Challan --</option>';
+            const challanCollection = getChallanCollectionRef();
+            const challanQuery = query(challanCollection, where('status', '!=', 'Completed'));
+            try {
+                const challanSnapshot = await getDocs(challanQuery);
+                challanSnapshot.forEach(doc => {
+                    const challan = doc.data();
+                    const option = document.createElement('option');
+                    option.value = doc.id;
+                    option.textContent = `${challan.challanNo} - ${challan.vendorName} - ${challan.date}`;
+                    challanSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error("Error fetching challans for GRN:", error);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function deleteChallan(docId) {
+            showLoading();
+            const docRef = doc(db, `/artifacts/${appId}/public/data/challans/${docId}`);
+            try {
+                await deleteDoc(docRef);
+                console.log("Challan deleted successfully!");
+            } catch (error) {
+                console.error("Error deleting challan:", error);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function deleteGRN(docId) {
+            showLoading();
+            const docRef = doc(db, `/artifacts/${appId}/public/data/grns/${docId}`);
+            try {
+                await deleteDoc(docRef);
+                console.log("GRN deleted successfully!");
+            } catch (error) {
+                console.error("Error deleting GRN:", error);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function editChallan(docId) {
+            showLoading();
+            const docRef = doc(db, `/artifacts/${appId}/public/data/challans/${docId}`);
+            try {
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    document.getElementById('pills-challan-tab').click();
+                    document.getElementById('vendorNameChallan').value = data.vendorName;
+                    document.getElementById('challanNo').value = data.challanNo;
+                    document.getElementById('challanDate').value = data.date;
+                    document.getElementById('challanItemsContainer').innerHTML = '';
+                    data.items.forEach(item => {
+                        createItemForm(document.getElementById('challanItemsContainer'), false, item);
+                    });
+                    document.getElementById('issueChallanBtn').textContent = 'Update Challan';
+                    document.getElementById('issueChallanBtn').dataset.docId = docId;
+                    updateTotalChallanQuantity();
+                }
+            } catch (error) {
+                console.error("Error fetching document for edit:", error);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function updateChallan(docId) {
+            showLoading();
+            const docRef = doc(db, `/artifacts/${appId}/public/data/challans/${docId}`);
+            const vendorName = document.getElementById('vendorNameChallan').value;
+            const challanNo = document.getElementById('challanNo').value;
+            const date = document.getElementById('challanDate').value;
+            const items = [];
+            document.querySelectorAll('#challanItemsContainer .item-row').forEach(row => {
+                const sku = row.querySelector('.item-sku').value;
+                const color = row.querySelector('.item-color').value;
+                const type = row.querySelector('.item-type').value;
+                const rate = parseFloat(row.querySelector('.item-rate').value);
+                const remarks = row.querySelector('.item-remarks').value;
+                const sizes = {};
+                row.querySelectorAll('.size-qty-input').forEach(input => {
+                    sizes[input.dataset.size] = parseInt(input.value, 10) || 0;
+                });
+                items.push({ sku, color, type, rate, remarks, sizes });
+            });
+            const updatedData = {
+                vendorName, challanNo, date, items,
+                updatedAt: new Date().toISOString()
+            };
+            try {
+                await updateDoc(docRef, updatedData);
+                console.log("Challan updated successfully!");
+                document.getElementById('resetChallanForm').click();
+                document.getElementById('issueChallanBtn').textContent = 'Issue Challan';
+                delete document.getElementById('issueChallanBtn').dataset.docId;
+            } catch (error) {
+                console.error("Error updating challan:", error);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function editGRN(docId) {
+            showLoading();
+            const docRef = doc(db, `/artifacts/${appId}/public/data/grns/${docId}`);
+            try {
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    document.getElementById('pills-grn-tab').click();
+                    document.getElementById('grnType').value = 'manual';
+                    document.getElementById('grnFromChallanFields').style.display = 'none';
+                    document.getElementById('grnManualFields').style.display = 'block';
+
+                    document.getElementById('vendorNameGRN').value = data.vendorName;
+                    document.getElementById('grnDate').value = data.date;
+                    document.getElementById('challanRefNoManual').value = data.challanRefNo || '';
+                    document.getElementById('grnItemsContainer').innerHTML = '';
+
+                    // The original challan item data is not stored in the GRN doc, so we can't show "issued" vs "received"
+                    // for the purpose of this edit feature. We'll show the received quantities.
+                    data.items.forEach(item => {
+                        createItemForm(document.getElementById('grnItemsContainer'), true, item, { sizes: {} });
+                    });
+
+                    document.getElementById('receiveGRNBtn').textContent = 'Update GRN';
+                    document.getElementById('receiveGRNBtn').dataset.docId = docId;
+
+                }
+            } catch (error) {
+                console.error("Error fetching GRN document for edit:", error);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function updateGRN(docId) {
+            showLoading();
+            const docRef = doc(db, `/artifacts/${appId}/public/data/grns/${docId}`);
+            const vendorName = document.getElementById('vendorNameGRN').value;
+            const date = document.getElementById('grnDate').value;
+            const challanRefNo = document.getElementById('challanRefNoManual').value;
+            const items = [];
+
+            document.querySelectorAll('#grnManualFields .item-row').forEach(row => {
+                const receivedSizes = {};
+                row.querySelectorAll('.grn-qty-input').forEach(input => {
+                    receivedSizes[input.dataset.size] = parseInt(input.value, 10) || 0;
+                });
+                items.push({
+                    sku: row.querySelector('.item-sku').value,
+                    color: row.querySelector('.item-color').value,
+                    type: row.querySelector('.item-type').value,
+                    rate: parseFloat(row.querySelector('.item-rate').value),
+                    remarks: row.querySelector('.item-remarks').value,
+                    receivedSizes: receivedSizes
+                });
+            });
+
+            const updatedData = {
+                vendorName,
+                date,
+                challanRefNo,
+                items,
+                updatedAt: new Date().toISOString()
+            };
+
+            try {
+                await updateDoc(docRef, updatedData);
+                console.log("GRN updated successfully!");
+                document.getElementById('resetGRNForm').click();
+                document.getElementById('receiveGRNBtn').textContent = 'Receive GRN';
+                delete document.getElementById('receiveGRNBtn').dataset.docId;
+            } catch (error) {
+                console.error("Error updating GRN:", error);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function setupListeners() {
+            const editChallanNoBtn = document.getElementById('editChallanNoBtn');
+            const challanNoInput = document.getElementById('challanNo');
+
+            editChallanNoBtn.addEventListener('click', () => {
+                const isReadonly = challanNoInput.hasAttribute('readonly');
+                if (isReadonly) {
+                    challanNoInput.removeAttribute('readonly');
+                    editChallanNoBtn.textContent = 'Lock';
+                    editChallanNoBtn.classList.remove('btn-secondary');
+                    editChallanNoBtn.classList.add('btn-warning');
+                } else {
+                    challanNoInput.setAttribute('readonly', true);
+                    editChallanNoBtn.textContent = 'Edit';
+                    editChallanNoBtn.classList.remove('btn-warning');
+                    editChallanNoBtn.classList.add('btn-secondary');
+                }
+            });
+
+            document.getElementById('addNewChallanItem').addEventListener('click', () => {
+                createItemForm(document.getElementById('challanItemsContainer'));
+            });
+
+            document.getElementById('resetChallanForm').addEventListener('click', async () => {
+                document.getElementById('vendorNameChallan').value = '';
+                document.getElementById('challanDate').valueAsDate = new Date();
+                document.getElementById('challanItemsContainer').innerHTML = '';
+                document.getElementById('totalQtyChallan').value = 0;
+                createItemForm(document.getElementById('challanItemsContainer'));
+                await getDocumentCounters();
+                document.getElementById('challanNo').value = generateNextChallanNumber(lastChallanNumber);
+                challanNoInput.setAttribute('readonly', true);
+                editChallanNoBtn.textContent = 'Edit';
+                editChallanNoBtn.classList.remove('btn-warning');
+                editChallanNoBtn.classList.add('btn-secondary');
+                document.getElementById('issueChallanBtn').textContent = 'Issue Challan';
+                delete document.getElementById('issueChallanBtn').dataset.docId;
+            });
+
+            // Added reset GRN button listener
+            document.getElementById('resetGRNForm').addEventListener('click', async () => {
+                document.getElementById('grnType').value = 'fromChallan';
+                document.getElementById('grnFromChallanFields').style.display = 'block';
+                document.getElementById('grnManualFields').style.display = 'none';
+                document.getElementById('vendorNameGRN').value = '';
+                document.getElementById('grnDate').valueAsDate = new Date();
+                document.getElementById('challanRefNoManual').value = '';
+                document.getElementById('grnItemsContainer').innerHTML = '';
+                document.getElementById('challanSelect').value = '';
+                document.getElementById('selectedChallanDetails').innerHTML = '';
+                document.getElementById('receiveGRNBtn').textContent = 'Receive GRN';
+                delete document.getElementById('receiveGRNBtn').dataset.docId;
+                await getDocumentCounters();
+                fetchChallansForGRN();
+            });
+
+            document.getElementById('issueChallanBtn').addEventListener('click', async (e) => {
+                const docId = e.target.dataset.docId;
+                if (docId) {
+                    await updateChallan(docId);
+                } else {
+                    const vendorName = document.getElementById('vendorNameChallan').value;
+                    const challanNo = document.getElementById('challanNo').value;
+                    const date = document.getElementById('challanDate').value;
+                    const items = [];
+
+                    document.querySelectorAll('#challanItemsContainer .item-row').forEach(row => {
+                        const sku = row.querySelector('.item-sku').value;
+                        const color = row.querySelector('.item-color').value;
+                        const type = row.querySelector('.item-type').value;
+                        const rate = parseFloat(row.querySelector('.item-rate').value);
+                        const remarks = row.querySelector('.item-remarks').value;
+                        const sizes = {};
+                        row.querySelectorAll('.size-qty-input').forEach(input => {
+                            sizes[input.dataset.size] = parseInt(input.value, 10) || 0;
+                        });
+                        items.push({ sku, color, type, rate, remarks, sizes });
+                    });
+
+                    if (!vendorName || !challanNo || !date || items.length === 0) {
+                        console.error("Please fill all fields and add at least one item.");
+                        return;
+                    }
+
+                    const challanData = {
+                        challanNo,
+                        vendorName,
+                        date,
+                        items,
+                        status: 'Pending',
+                        createdAt: new Date().toISOString(),
+                        receivedItems: items.map(item => ({
+                            sku: item.sku,
+                            color: item.color,
+                            type: item.type,
+                            rate: item.rate,
+                            remarks: item.remarks,
+                            receivedSizes: {}
+                        }))
+                    };
+
+                    await updateChallanCounter(challanNo);
+                    await saveChallanToFirestore(challanData);
+                }
+            });
+
+            document.getElementById('grnType').addEventListener('change', (e) => {
+                const type = e.target.value;
+                document.getElementById('grnFromChallanFields').style.display = type === 'fromChallan' ? 'block' : 'none';
+                document.getElementById('grnManualFields').style.display = type === 'manual' ? 'block' : 'none';
+                if (type === 'fromChallan') {
+                    fetchChallansForGRN();
+                } else {
+                    document.getElementById('grnItemsContainer').innerHTML = '';
+                    createItemForm(document.getElementById('grnItemsContainer'), true);
+                }
+            });
+
+            document.getElementById('addNewGRNItem').addEventListener('click', () => {
+                createItemForm(document.getElementById('grnItemsContainer'), true);
+            });
+
+            document.getElementById('challanSelect').addEventListener('change', async (e) => {
+                const challanId = e.target.value;
+                const detailsContainer = document.getElementById('selectedChallanDetails');
+                detailsContainer.innerHTML = '';
+
+                if (challanId) {
+                    showLoading();
+                    const challanDoc = await getDoc(doc(db, `/artifacts/${appId}/public/data/challans/${challanId}`));
+                    if (challanDoc.exists()) {
+                        const challan = challanDoc.data();
+
+                        const vendorNameDiv = document.createElement('div');
+                        vendorNameDiv.innerHTML = `<p><strong>Vendor:</strong> ${challan.vendorName}</p>`;
+                        detailsContainer.appendChild(vendorNameDiv);
+
+                        const itemsContainer = document.createElement('div');
+                        itemsContainer.classList.add('card', 'p-3', 'mb-3');
+                        itemsContainer.innerHTML = `<h5>Items for Challan No. ${challan.challanNo}</h5>`;
+
+                        challan.items.forEach((item, index) => {
+                            const itemRow = document.createElement('div');
+                            itemRow.classList.add('item-row', 'mb-3');
+                            itemRow.innerHTML = `
+                            <div class="row g-3">
+                                <div class="col-md-6 col-lg-3">
+                                    <label class="form-label">SKU Code</label>
+                                    <input type="text" class="form-control item-sku" value="${item.sku}" readonly>
+                                </div>
+                                <div class="col-md-6 col-lg-3">
+                                    <label class="form-label">Color</label>
+                                    <input type="text" class="form-control item-color" value="${item.color}" readonly>
+                                </div>
+                                <div class="col-md-6 col-lg-3">
+                                    <label class="form-label">Type</label>
+                                    <input type="text" class="form-control item-type" value="${item.type}" readonly>
+                                </div>
+                                <div class="col-md-6 col-lg-3">
+                                    <label class="form-label">Rate</label>
+                                    <input type="number" class="form-control item-rate" value="${item.rate}" step="0.01" readonly>
+                                </div>
+                                <div class="col-md-6 col-lg-3">
+                                    <label class="form-label">Remarks</label>
+                                    <input type="text" class="form-control item-remarks" value="${item.remarks}" readonly>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <label class="form-label">Size-wise Quantities</label>
+                                <div class="row g-2 size-qty-container">
+                                    ${Object.entries(item.sizes).map(([size, issuedQty]) => {
+                                let receivedQty = (challan.receivedItems[index].receivedSizes && challan.receivedItems[index].receivedSizes[size]) ? challan.receivedItems[index].receivedSizes[size] : 0;
+                                let remainingQty = issuedQty - receivedQty;
+                                return `
+                                        <div class="col-6 col-sm-4 col-md-2">
+                                            <label class="form-label">${size}</label>
+                                            <input type="number" class="form-control challan-qty-input" data-size="${size}" value="${remainingQty}" readonly>
+                                            <input type="number" class="form-control grn-qty-input mt-1" data-size="${size}" placeholder="Rec Qty" value="0">
+                                        </div>
+                                    `;
+                            }).join('')}
+                                </div>
+                            </div>
+                        `;
+                            itemsContainer.appendChild(itemRow);
+                        });
+                        detailsContainer.appendChild(itemsContainer);
+                    }
+                    hideLoading();
+                }
+            });
+
+            document.getElementById('receiveGRNBtn').addEventListener('click', async (e) => {
+                const docId = e.target.dataset.docId;
+                if (docId) {
+                    await updateGRN(docId);
+                } else {
+                    const grnType = document.getElementById('grnType').value;
+                    let grnData = {};
+
+                    if (grnType === 'fromChallan') {
+                        const challanId = document.getElementById('challanSelect').value;
+                        if (!challanId) {
+                            console.error("Please select a challan.");
+                            return;
+                        }
+                        const challanDocRef = doc(db, `/artifacts/${appId}/public/data/challans/${challanId}`);
+                        const challanDoc = await getDoc(challanDocRef);
+                        if (!challanDoc.exists()) {
+                            console.error("Challan not found.");
+                            return;
+                        }
+                        const challan = challanDoc.data();
+
+                        const grnItems = [];
+                        let anyReceived = false;
+                        const newReceivedItems = JSON.parse(JSON.stringify(challan.receivedItems));
+
+                        document.querySelectorAll('#selectedChallanDetails .item-row').forEach((row, itemIndex) => {
+                            const receivedSizes = {};
+                            row.querySelectorAll('.grn-qty-input').forEach(input => {
+                                const qty = parseInt(input.value, 10) || 0;
+                                if (qty > 0) {
+                                    receivedSizes[input.dataset.size] = qty;
+                                    anyReceived = true;
+                                    newReceivedItems[itemIndex].receivedSizes[input.dataset.size] = (newReceivedItems[itemIndex].receivedSizes[input.dataset.size] || 0) + qty;
+                                }
+                            });
+                            grnItems.push({
+                                sku: row.querySelector('.item-sku').value,
+                                color: row.querySelector('.item-color').value,
+                                type: row.querySelector('.item-type').value,
+                                rate: parseFloat(row.querySelector('.item-rate').value),
+                                remarks: row.querySelector('.item-remarks').value,
+                                issuedQty: parseInt(row.querySelector('.challan-qty-input').value, 10) || 0,
+                                receivedSizes: receivedSizes
+                            });
+                        });
+
+                        if (!anyReceived) {
+                            console.error("Please enter a received quantity for at least one item.");
+                            return;
+                        }
+
+                        const totalIssuedQty = challan.items.reduce((sum, item) => sum + Object.values(item.sizes).reduce((s, q) => s + q, 0), 0);
+                        const totalReceivedQty = newReceivedItems.reduce((sum, item) => sum + Object.values(item.receivedSizes).reduce((s, q) => s + q, 0), 0);
+
+                        const challanStatus = totalIssuedQty === totalReceivedQty ? 'Completed' : 'Partially Received';
+
+                        grnData = {
+                            grnNo: generateNextGrnNumber(lastGrnNumber),
+                            challanRefNo: challan.challanNo,
+                            vendorName: challan.vendorName,
+                            date: new Date().toISOString().split('T')[0],
+                            items: grnItems,
+                            createdAt: new Date().toISOString()
+                        };
+
+                        await updateGrnCounter(grnData.grnNo);
+
+                        await updateDoc(challanDocRef, {
+                            status: challanStatus,
+                            receivedItems: newReceivedItems
+                        });
+
+                    } else {
+                        const vendorName = document.getElementById('vendorNameGRN').value;
+                        const date = document.getElementById('grnDate').value;
+                        const challanRefNo = document.getElementById('challanRefNoManual').value;
+                        const items = [];
+                        document.querySelectorAll('#grnManualFields .item-row').forEach(row => {
+                            const receivedSizes = {};
+                            row.querySelectorAll('.grn-qty-input').forEach(input => {
+                                receivedSizes[input.dataset.size] = parseInt(input.value, 10) || 0;
+                            });
+                            items.push({
+                                sku: row.querySelector('.item-sku').value,
+                                color: row.querySelector('.item-color').value,
+                                type: row.querySelector('.item-type').value,
+                                rate: parseFloat(row.querySelector('.item-rate').value),
+                                remarks: row.querySelector('.item-remarks').value,
+                                receivedSizes: receivedSizes
+                            });
+                        });
+
+                        if (!vendorName || !date || items.length === 0) {
+                            console.error("Please fill all fields and add at least one item.");
+                            return;
+                        }
+
+                        grnData = {
+                            grnNo: generateNextGrnNumber(lastGrnNumber),
+                            vendorName,
+                            date,
+                            challanRefNo,
+                            items,
+                            createdAt: new Date().toISOString()
+                        };
+                        await updateGrnCounter(grnData.grnNo);
+                    }
+                    await saveGRNToFirestore(grnData);
+                }
+            });
+
+            document.getElementById('refreshRecords').addEventListener('click', () => {
+                const activeTab = document.querySelector('#records-tab .nav-link.active');
+                if (activeTab.id === 'challan-records-tab') {
+                    fetchAndDisplayChallanRecords();
+                } else if (activeTab.id === 'grn-records-tab') {
+                    fetchAndDisplayGrnRecords();
+                }
+            });
+
+            document.getElementById('challan-records-tab').addEventListener('shown.bs.tab', () => {
+                if (grnUnsubscribe) {
+                    grnUnsubscribe();
+                    grnUnsubscribe = null;
+                }
+                fetchAndDisplayChallanRecords();
+            });
+
+            document.getElementById('grn-records-tab').addEventListener('shown.bs.tab', () => {
+                if (challanUnsubscribe) {
+                    challanUnsubscribe();
+                    challanUnsubscribe = null;
+                }
+                fetchAndDisplayGrnRecords();
+            });
+
+            document.getElementById('exportRecords').addEventListener('click', exportRecordsAsCSV);
+
+            const addSizeModal = new bootstrap.Modal(document.getElementById('addSizeModal'));
+            document.getElementById('saveNewSize').addEventListener('click', () => {
+                const sizeName = document.getElementById('newSizeName').value.trim();
+                if (sizeName) {
+                    document.querySelectorAll('.size-qty-container').forEach(container => {
+                        createSizeInput(container, sizeName, 0);
+                    });
+                    document.getElementById('newSizeName').value = '';
+                    addSizeModal.hide();
+                }
+            });
+        }
+
+        function unsubscribeAll() {
+            if (challanUnsubscribe) {
+                challanUnsubscribe();
+                challanUnsubscribe = null;
+            }
+            if (grnUnsubscribe) {
+                grnUnsubscribe();
+                grnUnsubscribe = null;
+            }
+        }
+
+        async function fetchAndDisplayChallanRecords() {
+            showLoading();
+            if (challanUnsubscribe) challanUnsubscribe();
+
+            const tableBody = document.getElementById('challanRecordsTableBody');
+            const challanQuery = query(getChallanCollectionRef());
+
+            challanUnsubscribe = onSnapshot(challanQuery, (querySnapshot) => {
+                let totalChallans = 0;
+                let pendingChallans = 0;
+                let completedChallans = 0;
+                let totalQuantity = 0;
+                let totalAmount = 0;
+                const challans = [];
+
+                querySnapshot.forEach(doc => {
+                    const data = { id: doc.id, type: 'Challan', ...doc.data() };
+                    challans.push(data);
+                    totalChallans++;
+                    if (data.status === 'Pending' || data.status === 'Partially Received') {
+                        pendingChallans++;
+                    }
+                    if (data.status === 'Completed') {
+                        completedChallans++;
+                    }
+                    const recordQty = data.items.reduce((sum, item) => sum + Object.values(item.sizes).reduce((s, q) => s + q, 0), 0);
+                    const recordAmount = data.items.reduce((sum, item) => sum + Object.values(item.sizes).reduce((s, q) => s + q, 0) * item.rate, 0);
+                    totalQuantity += recordQty;
+                    totalAmount += recordAmount;
+                });
+
+                document.getElementById('totalChallans').textContent = totalChallans;
+                document.getElementById('pendingChallans').textContent = pendingChallans;
+                document.getElementById('completedChallans').textContent = completedChallans;
+                document.getElementById('totalQuantity').textContent = totalQuantity;
+                document.getElementById('totalAmount').textContent = `₹${totalAmount.toFixed(2)}`;
+
+                challans.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+                const vendorFilter = document.getElementById('recordsVendorFilter').value.toLowerCase();
+                const skuFilter = document.getElementById('recordsSkuFilter').value.toLowerCase();
+                const dateFilter = document.getElementById('recordsDateFilter').value;
+                const statusFilter = document.getElementById('statusFilter').value;
+
+                let filteredChallans = challans.filter(record => {
+                    const date = new Date(record.date);
+                    const today = new Date();
+                    let dateMatch = true;
+                    if (dateFilter === 'today') {
+                        dateMatch = date.toDateString() === today.toDateString();
+                    } else if (dateFilter === 'this_week') {
+                        const startOfWeek = new Date(today);
+                        startOfWeek.setDate(today.getDate() - today.getDay());
+                        dateMatch = date >= startOfWeek;
+                    } else if (dateFilter === 'this_month') {
+                        dateMatch = date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear();
+                    }
+
+                    const vendorMatch = !vendorFilter || record.vendorName.toLowerCase().includes(vendorFilter);
+                    const skuMatch = !skuFilter || record.items.some(item => item.sku.toLowerCase().includes(skuFilter));
+                    const statusMatch = statusFilter === 'all' || record.status.toLowerCase().includes(statusFilter.replace('_', ' '));
+                    return dateMatch && vendorMatch && skuMatch && statusMatch;
+                });
+
+                tableBody.innerHTML = '';
+                if (filteredChallans.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="8" class="text-center">No records found.</td></tr>';
+                } else {
+                    filteredChallans.forEach(record => {
+                        const totalQty = record.items.reduce((sum, item) => sum + Object.values(item.sizes).reduce((s, q) => s + q, 0), 0);
+                        const totalAmount = record.items.reduce((sum, item) => sum + Object.values(item.sizes).reduce((s, q) => s + q, 0) * item.rate, 0);
+
+                        let statusHtml = '';
+                        const totalIssuedQty = record.items.reduce((sum, item) => sum + Object.values(item.sizes).reduce((s, q) => s + q, 0), 0);
+                        const totalReceivedQty = record.receivedItems.reduce((sum, item) => sum + Object.values(item.receivedSizes).reduce((s, q) => s + q, 0), 0);
+                        const progress = totalIssuedQty > 0 ? (totalReceivedQty / totalIssuedQty) * 100 : 0;
+
+                        let statusBadge = 'bg-primary';
+                        if (record.status === 'Completed') {
+                            statusBadge = 'bg-success';
+                        } else if (record.status === 'Partially Received') {
+                            statusBadge = 'bg-warning text-dark';
+                        } else {
+                            statusBadge = 'bg-secondary';
+                        }
+
+                        statusHtml = `
+                        <span class="badge ${statusBadge}">${record.status}</span>
+                        <div class="progress-bar-container mt-1">
+                            <div class="progress-bar-fill bg-success" style="width: ${progress}%;"></div>
+                        </div>
+                    `;
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                        <td>${record.challanNo}</td>
+                        <td>${record.vendorName}</td>
+                        <td>${record.date}</td>
+                        <td>${record.items.length}</td>
+                        <td>${totalQty}</td>
+                        <td>₹${totalAmount.toFixed(2)}</td>
+                        <td>${statusHtml}</td>
+                        <td>
+                            <button class="btn btn-sm btn-info text-white print-btn" data-id="${record.id}" data-type="challan" data-with-rate="false">Print</button>
+                            <button class="btn btn-sm btn-info text-white print-btn" data-id="${record.id}" data-type="challan" data-with-rate="true">Print with Rate</button>
+                            <button class="btn btn-sm btn-warning edit-btn" data-id="${record.id}" data-type="challan">Edit</button>
+                            <button class="btn btn-sm btn-danger delete-btn" data-id="${record.id}" data-type="challan">Delete</button>
+                        </td>
+                    `;
+                        tableBody.appendChild(row);
+                    });
+                }
+                hideLoading();
+            });
+        }
+
+        async function fetchAndDisplayGrnRecords() {
+            showLoading();
+            if (grnUnsubscribe) grnUnsubscribe();
+
+            const tableBody = document.getElementById('grnRecordsTableBody');
+            const grnQuery = query(getGrnCollectionRef());
+
+            grnUnsubscribe = onSnapshot(grnQuery, (querySnapshot) => {
+                let totalGrns = 0;
+                const grns = [];
+                querySnapshot.forEach(doc => {
+                    grns.push({ id: doc.id, type: 'GRN', ...doc.data() });
+                    totalGrns++;
+                });
+
+                document.getElementById('totalGrns').textContent = totalGrns;
+
+                grns.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+                const vendorFilter = document.getElementById('recordsVendorFilter').value.toLowerCase();
+                const skuFilter = document.getElementById('recordsSkuFilter').value.toLowerCase();
+                const dateFilter = document.getElementById('recordsDateFilter').value;
+
+                let filteredGrns = grns.filter(record => {
+                    const date = new Date(record.date);
+                    const today = new Date();
+                    let dateMatch = true;
+                    if (dateFilter === 'today') {
+                        dateMatch = date.toDateString() === today.toDateString();
+                    } else if (dateFilter === 'this_week') {
+                        const startOfWeek = new Date(today);
+                        startOfWeek.setDate(today.getDate() - today.getDay());
+                        dateMatch = date >= startOfWeek;
+                    } else if (dateFilter === 'this_month') {
+                        dateMatch = date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear();
+                    }
+
+                    const vendorMatch = !vendorFilter || record.vendorName.toLowerCase().includes(vendorFilter);
+                    const skuMatch = !skuFilter || record.items.some(item => item.sku.toLowerCase().includes(skuFilter));
+                    return dateMatch && vendorMatch && skuMatch;
+                });
+
+                tableBody.innerHTML = '';
+                if (filteredGrns.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="7" class="text-center">No records found.</td></tr>';
+                } else {
+                    filteredGrns.forEach(record => {
+                        const row = document.createElement('tr');
+                        const totalQty = record.items.reduce((sum, item) => sum + Object.values(item.receivedSizes).reduce((s, q) => s + q, 0), 0);
+
+                        row.innerHTML = `
+                        <td>${record.grnNo}</td>
+                        <td>${record.challanRefNo || 'N/A'}</td>
+                        <td>${record.vendorName}</td>
+                        <td>${record.date}</td>
+                        <td>${record.items.length}</td>
+                        <td>${totalQty}</td>
+                        <td>
+                            <button class="btn btn-sm btn-info text-white print-btn" data-id="${record.id}" data-type="grn">Print</button>
+                            <button class="btn btn-sm btn-warning edit-btn" data-id="${record.id}" data-type="grn">Edit</button>
+                            <button class="btn btn-sm btn-danger delete-btn" data-id="${record.id}" data-type="grn">Delete</button>
+                        </td>
+                    `;
+                        tableBody.appendChild(row);
+                    });
+                }
+
+                hideLoading();
+            });
+        }
+
+        document.getElementById('challan-records').addEventListener('click', (e) => {
+            const target = e.target;
+            if (target.classList.contains('print-btn')) {
+                const recordId = target.dataset.id;
+                const recordType = target.dataset.type;
+                const withRate = target.dataset.withRate === 'true';
+                let docRef = doc(db, `/artifacts/${appId}/public/data/${recordType}s/${recordId}`);
+                getDoc(docRef).then(docSnap => {
+                    if (docSnap.exists()) {
+                        populatePrintArea(docSnap.data(), recordType, withRate);
+                    } else {
+                        console.error("Document not found!");
+                    }
+                }).catch(error => console.error("Error fetching document:", error));
+            } else if (target.classList.contains('delete-btn')) {
+                const recordId = target.dataset.id;
+                const recordType = target.dataset.type;
+                if (recordType === 'challan') {
+                    deleteChallan(recordId);
+                } else if (recordType === 'grn') {
+                    deleteGRN(recordId);
+                }
+            } else if (target.classList.contains('edit-btn')) {
+                const recordId = target.dataset.id;
+                const recordType = target.dataset.type;
+                if (recordType === 'challan') {
+                    editChallan(recordId);
+                } else if (recordType === 'grn') {
+                    editGRN(recordId);
+                }
+            }
+        });
+
+        document.getElementById('grn-records').addEventListener('click', (e) => {
+            const target = e.target;
+            if (target.classList.contains('print-btn')) {
+                const recordId = target.dataset.id;
+                const recordType = target.dataset.type;
+                let docRef = doc(db, `/artifacts/${appId}/public/data/${recordType}s/${recordId}`);
+                getDoc(docRef).then(docSnap => {
+                    if (docSnap.exists()) {
+                        populatePrintArea(docSnap.data(), recordType);
+                    } else {
+                        console.error("Document not found!");
+                    }
+                }).catch(error => console.error("Error fetching document:", error));
+            } else if (target.classList.contains('delete-btn')) {
+                const recordId = target.dataset.id;
+                const recordType = target.dataset.type;
+                if (recordType === 'challan') {
+                    deleteChallan(recordId);
+                } else if (recordType === 'grn') {
+                    deleteGRN(recordId);
+                }
+            } else if (target.classList.contains('edit-btn')) {
+                const recordId = target.dataset.id;
+                const recordType = target.dataset.type;
+                if (recordType === 'challan') {
+                    editChallan(recordId);
+                } else if (recordType === 'grn') {
+                    editGRN(recordId);
+                }
+            }
+        });
+
+        function exportRecordsAsCSV() {
+            const activeTabPane = document.querySelector('.tab-pane.active');
+            let tableName = activeTabPane.id === 'challan-records' ? 'Challan Records' : 'GRN Records';
+
+            let table = activeTabPane.querySelector('table');
+            let csv = [];
+            let rows = table.querySelectorAll('tr');
+
+            const headerRow = rows[0].cloneNode(true);
+            const actionHeader = headerRow.querySelector('th:last-child');
+            if (actionHeader) actionHeader.remove();
+
+            const header = Array.from(headerRow.querySelectorAll('th')).map(th => th.innerText).join(',');
+            csv.push(tableName);
+            csv.push(header);
+
+            for (let i = 1; i < rows.length; i++) {
+                const row = rows[i];
+                const rowData = Array.from(row.querySelectorAll('td')).slice(0, -1).map(cell => {
+                    const text = cell.innerText.replace(/\n/g, ' ').trim();
+                    return `"${text}"`;
+                });
+                csv.push(rowData.join(','));
+            }
+
+            const csvContent = csv.join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `${tableName.toLowerCase().replace(' ', '_')}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        window.onload = async () => {
+            await authenticateUser();
+            await getDocumentCounters();
+            document.getElementById('challanNo').value = generateNextChallanNumber(lastChallanNumber);
+            document.getElementById('challanDate').valueAsDate = new Date();
+            createItemForm(document.getElementById('challanItemsContainer'));
+            setupListeners();
+            fetchChallansForGRN();
+            fetchAndDisplayChallanRecords();
+
+            document.getElementById('recordsVendorFilter').addEventListener('input', fetchAndDisplayChallanRecords);
+            document.getElementById('recordsSkuFilter').addEventListener('input', fetchAndDisplayChallanRecords);
+            document.getElementById('recordsDateFilter').addEventListener('change', fetchAndDisplayChallanRecords);
+            document.getElementById('statusFilter').addEventListener('change', fetchAndDisplayChallanRecords);
+            document.getElementById('grnVendorFilter').addEventListener('input', fetchAndDisplayGrnRecords);
+            document.getElementById('grnSkuFilter').addEventListener('input', fetchAndDisplayGrnRecords);
+            document.getElementById('grnDateFilter').addEventListener('change', fetchAndDisplayGrnRecords);
+        };
+    </script>
+
+    <div class="modal fade" id="addSizeModal" tabindex="-1" aria-labelledby="addSizeModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addSizeModalLabel">Add New Size</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="newSizeName" class="form-label">Size Name</label>
+                        <input type="text" class="form-control" id="newSizeName" placeholder="e.g., 3XL">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="saveNewSize">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
