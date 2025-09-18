@@ -73,8 +73,27 @@
         }
 
         .table-responsive {
-            max-height: 500px; /* Added for scrollbar */
+            max-height: 500px;
             overflow-y: auto;
+        }
+        
+        #pills-records .table {
+            font-size: 0.875rem; /* Reduced font size for records table */
+        }
+
+        #pills-records .table th, #pills-records .table td {
+            padding: 0.5rem; 
+        }
+
+        .sku-cell {
+            max-width: 200px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        #challanRecordsTableBody tr, #grnRecordsTableBody tr {
+            cursor: pointer;
         }
 
         @media print {
@@ -197,9 +216,16 @@
                     </div>
 
                     <div id="grnFromChallanFields">
-                        <div class="mb-3">
-                            <label for="challanSelect" class="form-label">Select Challan</label>
-                            <select class="form-select" id="challanSelect"></select>
+                         <div class="row g-3 mb-3">
+                            <div class="col-md-8">
+                                <label for="challanSearch" class="form-label">Search Challan by No. or Vendor</label>
+                                <input class="form-control" list="challanOptions" id="challanSearch" placeholder="Type to search...">
+                                <datalist id="challanOptions"></datalist>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="grnFromChallanDate" class="form-label">GRN Date</label>
+                                <input type="date" class="form-control" id="grnFromChallanDate">
+                            </div>
                         </div>
                         <div id="selectedChallanDetails" class="mb-4"></div>
                     </div>
@@ -285,40 +311,46 @@
 
                     <h5 class="h6 mt-4">Statistics (Based on Filters)</h5>
                     <div class="row g-3 mb-4">
-                        <div class="col">
-                            <div class="card p-3 text-center">
-                                <h5 class="h6 mb-0">Total Challans</h5>
-                                <h2 class="h4" id="totalChallans">0</h2>
+                        <div class="col-lg col-md-4 col-6 mb-3">
+                            <div class="card p-3 text-center h-100">
+                                <h6 class="mb-0">Total Challans</h6>
+                                <h4 class="h4" id="totalChallans">0</h4>
                             </div>
                         </div>
-                        <div class="col">
-                            <div class="card p-3 text-center">
-                                <h5 class="h6 mb-0">Total GRNs</h5>
-                                <h2 class="h4" id="totalGrns">0</h2>
+                        <div class="col-lg col-md-4 col-6 mb-3">
+                            <div class="card p-3 text-center h-100">
+                                <h6 class="mb-0">Total GRNs</h6>
+                                <h4 class="h4" id="totalGrns">0</h4>
                             </div>
                         </div>
-                         <div class="col">
-                            <div class="card p-3 text-center">
-                                <h5 class="h6 mb-0">Pending</h5>
-                                <h2 class="h4" id="pendingChallans">0</h2>
+                         <div class="col-lg col-md-4 col-6 mb-3">
+                            <div class="card p-3 text-center h-100">
+                                <h6 class="mb-0">Pending</h6>
+                                <h4 class="h4" id="pendingChallans">0</h4>
                             </div>
                         </div>
-                        <div class="col">
-                            <div class="card p-3 text-center">
-                                <h5 class="h6 mb-0">Completed</h5>
-                                <h2 class="h4" id="completedChallans">0</h2>
+                        <div class="col-lg col-md-4 col-6 mb-3">
+                            <div class="card p-3 text-center h-100">
+                                <h6 class="mb-0">Completed</h6>
+                                <h4 class="h4" id="completedChallans">0</h4>
                             </div>
                         </div>
-                         <div class="col">
-                            <div class="card p-3 text-center">
-                                <h5 class="h6 mb-0">Total Issued Qty</h5>
-                                <h2 class="h4" id="totalIssuedQty">0</h2>
+                         <div class="col-lg col-md-4 col-6 mb-3">
+                            <div class="card p-3 text-center h-100">
+                                <h6 class="mb-0">Total Issued Qty</h6>
+                                <h4 class="h4" id="totalIssuedQty">0</h4>
                             </div>
                         </div>
-                        <div class="col">
-                            <div class="card p-3 text-center">
-                                <h5 class="h6 mb-0">Total Received Qty</h5>
-                                <h2 class="h4" id="totalReceivedQty">0</h2>
+                        <div class="col-lg col-md-4 col-6 mb-3">
+                            <div class="card p-3 text-center h-100">
+                                <h6 class="mb-0">Total Received Qty</h6>
+                                <h4 class="h4" id="totalReceivedQty">0</h4>
+                            </div>
+                        </div>
+                        <div class="col-lg col-md-4 col-6 mb-3">
+                            <div class="card p-3 text-center h-100">
+                                <h6 class="mb-0">Total Issued Amt</h6>
+                                <h4 class="h4" id="totalIssuedAmount">₹0</h4>
                             </div>
                         </div>
                     </div>
@@ -366,6 +398,7 @@
                                             <th>Date Issued</th>
                                             <th>Completion Date</th>
                                             <th>Items</th>
+                                            <th>SKUs Included</th>
                                             <th>Qty Issued</th>
                                             <th>Qty Received</th>
                                             <th>Status</th>
@@ -388,6 +421,7 @@
                                             <th>Vendor</th>
                                             <th>Date</th>
                                             <th>Items</th>
+                                            <th>SKUs Included</th>
                                             <th>Total Qty Rcvd</th>
                                             <th>Actions</th>
                                         </tr>
@@ -405,6 +439,23 @@
 
     <div id="print-area"></div>
 
+    <div class="modal fade" id="recordDetailsModal" tabindex="-1" aria-labelledby="recordDetailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="recordDetailsModalLabel">Record Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="recordDetailsModalBody">
+                    </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
         crossorigin="anonymous"></script>
@@ -414,11 +465,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, getDocs, runTransaction, FieldValue, deleteField } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        // Log level for debugging Firestore
-        setLogLevel('debug');
-
+        
         // Firebase Configuration (from user prompt)
         const firebaseConfig = {
             apiKey: "AIzaSyD_rxbXIux1dsFWLLMcNFRPM30NDJQGYnE",
@@ -446,6 +493,7 @@
         let allChallans = [];
         let allGrns = [];
         let currentItemSizeContainer = null;
+        let detailsModal = null;
 
 
         async function authenticateUser() {
@@ -640,10 +688,12 @@
 
         function populatePrintArea(data, type, showRate = false) {
             const printArea = document.getElementById('print-area');
+            const originalTitle = document.title;
             let content = '';
             const logoUrl = "https://baniwomen.com/cdn/shop/files/Bani_Women_Logo_-_Final.pdf_193_x_60_px_ff33a7dd-f461-448d-91d3-5282e4fd0fce.png";
 
             if (type === 'challan') {
+                document.title = data.challanNo;
                 let challanItemsHtml = '';
                 let totalQtyIssued = 0;
                 let totalAmount = 0;
@@ -654,19 +704,17 @@
                             const itemAmount = qty * item.rate;
                             totalQtyIssued += qty;
                             totalAmount += itemAmount;
-
                             challanItemsHtml += `
                             <tr class="text-center">
-                                <td style="font-size: 10px;">${item.sku}</td>
-                                <td style="font-size: 10px;">${item.color}</td>
-                                <td style="font-size: 10px;">${item.type}</td>
-                                <td style="font-size: 10px;">${size}</td>
-                                <td style="font-size: 10px;">${qty}</td>
-                                ${showRate ? `<td style="font-size: 10px;">${item.rate}</td>` : ''}
-                                <td style="font-size: 10px;">${item.remarks}</td>
-                                <td style="font-size: 10px;">${showRate ? itemAmount.toFixed(2) : ''}</td>
-                            </tr>
-                        `;
+                                <td style="font-size: 12px; font-weight: 600;">${item.sku}</td>
+                                <td style="font-size: 12px; font-weight: 600;">${item.color}</td>
+                                <td style="font-size: 12px; font-weight: 600;">${item.type}</td>
+                                <td style="font-size: 12px; font-weight: 600;">${size}</td>
+                                <td style="font-size: 12px; font-weight: 600;">${qty}</td>
+                                ${showRate ? `<td style="font-size: 12px; font-weight: 600;">${item.rate}</td>` : ''}
+                                <td style="font-size: 12px; font-weight: 600;">${item.remarks}</td>
+                                <td style="font-size: 12px; font-weight: 600;">${showRate ? itemAmount.toFixed(2) : ''}</td>
+                            </tr>`;
                         }
                     });
                 });
@@ -681,42 +729,33 @@
                         <h2 class="h4 mt-4">Job Order Issue (Challan)</h2>
                     </div>
                     <div class="row g-3 mb-4">
-                        <div class="col-6">
-                            <strong>Challan No.:</strong> ${data.challanNo}
-                        </div>
-                        <div class="col-6">
-                            <strong>M/s:</strong> ${data.vendorName}
-                        </div>
-                        <div class="col-6">
-                            <strong>Dated:</strong> ${data.date}
-                        </div>
+                        <div class="col-6"><strong>Challan No.:</strong> ${data.challanNo}</div>
+                        <div class="col-6"><strong>M/s:</strong> ${data.vendorName}</div>
+                        <div class="col-6"><strong>Dated:</strong> ${data.date}</div>
                     </div>
                    <table class="table table-bordered">
                         <thead>
                             <tr class="text-center">
-                                <th style="font-size: 10px;">SKU</th>
-                                <th style="font-size: 10px;">COLOR</th>
-                                <th style="font-size: 10px;">TYPE</th>
-                                <th style="font-size: 10px;">SIZE</th>
-                                <th style="font-size: 10px;">QTY.</th>
-                                ${showRate ? `<th style="font-size: 10px;">RATE</th>` : ''}
-                                <th style="font-size: 10px;">REMARKS</th>
-                                <th style="font-size: 10px;">AMOUNT</th>
+                                <th style="font-size: 12px; font-weight: 600;">SKU</th>
+                                <th style="font-size: 12px; font-weight: 600;">COLOR</th>
+                                <th style="font-size: 12px; font-weight: 600;">TYPE</th>
+                                <th style="font-size: 12px; font-weight: 600;">SIZE</th>
+                                <th style="font-size: 12px; font-weight: 600;">QTY.</th>
+                                ${showRate ? `<th style="font-size: 12px; font-weight: 600;">RATE</th>` : ''}
+                                <th style="font-size: 12px; font-weight: 600;">REMARKS</th>
+                                <th style="font-size: 12px; font-weight: 600;">AMOUNT</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            ${challanItemsHtml}
-                        </tbody>
+                        <tbody>${challanItemsHtml}</tbody>
                     </table>
-
                     <div class="d-flex justify-content-end mt-4">
                         <strong>Total Quantity Issued: ${totalQtyIssued}</strong>
                         ${showRate ? `<strong class="ms-5">Total Amount: ₹${totalAmount.toFixed(2)}</strong>` : ''}
                     </div>
-                </div>
-            `;
+                </div>`;
 
             } else if (type === 'grn') {
+                document.title = data.grnNo;
                 let grnItemsHtml = '';
                 let totalQtyReceived = 0;
                 let totalAmount = 0;
@@ -727,18 +766,16 @@
                             const itemAmount = qty * item.rate;
                             totalQtyReceived += qty;
                             totalAmount += itemAmount;
-
                             grnItemsHtml += `
                             <tr class="text-center">
-                                <td style="font-size: 10px;">${item.sku}</td>
-                                <td style="font-size: 10px;">${item.color}</td>
-                                <td style="font-size: 10px;">${item.type}</td>
-                                <td style="font-size: 10px;">${size}</td>
-                                <td style="font-size: 10px;">${qty}</td>
-                                ${showRate ? `<td style="font-size: 10px;">${item.rate}</td>` : ''}
-                                <td style="font-size: 10px;">${showRate ? itemAmount.toFixed(2) : ''}</td>
-                            </tr>
-                        `;
+                                <td style="font-size: 12px; font-weight: 600;">${item.sku}</td>
+                                <td style="font-size: 12px; font-weight: 600;">${item.color}</td>
+                                <td style="font-size: 12px; font-weight: 600;">${item.type}</td>
+                                <td style="font-size: 12px; font-weight: 600;">${size}</td>
+                                <td style="font-size: 12px; font-weight: 600;">${qty}</td>
+                                ${showRate ? `<td style="font-size: 12px; font-weight: 600;">${item.rate}</td>` : ''}
+                                <td style="font-size: 12px; font-weight: 600;">${showRate ? itemAmount.toFixed(2) : ''}</td>
+                            </tr>`;
                         }
                     });
                 });
@@ -751,50 +788,38 @@
                         <p class="mb-0">Manufacture & Exporter of Fashion Garments</p>
                         <p class="mb-0 text-small" style="font-size: 12px;font-weight:bold;">Plot no 72, 3rd floor, Bagdola, Near Radha Krishna Mandir, Sector 8, Dwarka, New Delhi 110077</p>
                         <h2 class="h4 mt-4">Goods Receipt Note (GRN)</h2>
-
                     </div>
                     <div class="row g-3 mb-4">
-                        <div class="col-6">
-                            <strong>GRN No.:</strong> ${data.grnNo}
-                        </div>
-                        <div class="col-6">
-                            <strong>Challan Ref No.:</strong> ${data.challanRefNo || 'N/A'}
-                        </div>
-                        <div class="col-6">
-                            <strong>M/s:</strong> ${data.vendorName}
-                        </div>
-                        <div class="col-6">
-                            <strong>Dated:</strong> ${data.date}
-                        </div>
+                        <div class="col-6"><strong>GRN No.:</strong> ${data.grnNo}</div>
+                        <div class="col-6"><strong>Challan Ref No.:</strong> ${data.challanRefNo || 'N/A'}</div>
+                        <div class="col-6"><strong>M/s:</strong> ${data.vendorName}</div>
+                        <div class="col-6"><strong>Dated:</strong> ${data.date}</div>
                     </div>
                     <table class="table table-bordered">
                         <thead>
                             <tr class="text-center">
-                                <th style="font-size: 10px;">SKU</th>
-                                <th style="font-size: 10px;">COLOR</th>
-                                <th style="font-size: 10px;">TYPE</th>
-                                <th style="font-size: 10px;">SIZE</th>
-                                <th style="font-size: 10px;">RECEIVED QTY.</th>
-                                ${showRate ? `<th style="font-size: 10px;">RATE</th>` : ''}
-                                <th style="font-size: 10px;">AMOUNT</th>
+                                <th style="font-size: 12px; font-weight: 600;">SKU</th>
+                                <th style="font-size: 12px; font-weight: 600;">COLOR</th>
+                                <th style="font-size: 12px; font-weight: 600;">TYPE</th>
+                                <th style="font-size: 12px; font-weight: 600;">SIZE</th>
+                                <th style="font-size: 12px; font-weight: 600;">RECEIVED QTY.</th>
+                                ${showRate ? `<th style="font-size: 12px; font-weight: 600;">RATE</th>` : ''}
+                                <th style="font-size: 12px; font-weight: 600;">AMOUNT</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            ${grnItemsHtml}
-                        </tbody>
+                        <tbody>${grnItemsHtml}</tbody>
                     </table>
-
                     <div class="d-flex justify-content-end mt-4">
                         <strong>Total Quantity Received: ${totalQtyReceived}</strong>
                         ${showRate ? `<strong class="ms-5">Total Amount: ₹${totalAmount.toFixed(2)}</strong>` : ''}
                     </div>
                     <p class="mt-5 text-center fst-italic">This is a digitally signed document and does not require a manual signature.</p>
-                </div>
-            `;
+                </div>`;
             }
 
             printArea.innerHTML = content;
             window.print();
+            setTimeout(() => { document.title = originalTitle; }, 500);
         }
 
         async function saveChallanToFirestore(challanData) {
@@ -831,8 +856,8 @@
 
         async function fetchChallansForGRN() {
             showLoading();
-            const challanSelect = document.getElementById('challanSelect');
-            challanSelect.innerHTML = '<option value="">-- Select Challan --</option>';
+            const datalist = document.getElementById('challanOptions');
+            datalist.innerHTML = '';
             const challanCollection = getChallanCollectionRef();
             const challanQuery = query(challanCollection, where('status', '!=', 'Completed'));
             try {
@@ -840,9 +865,9 @@
                 challanSnapshot.forEach(doc => {
                     const challan = doc.data();
                     const option = document.createElement('option');
-                    option.value = doc.id;
-                    option.textContent = `${challan.challanNo} - ${challan.vendorName} - ${challan.date}`;
-                    challanSelect.appendChild(option);
+                    option.value = `${challan.challanNo} - ${challan.vendorName} - ${challan.date}`;
+                    option.dataset.id = doc.id;
+                    datalist.appendChild(option);
                 });
             } catch (error) {
                 console.error("Error fetching challans for GRN:", error);
@@ -1062,9 +1087,10 @@
                 document.getElementById('grnManualFields').style.display = 'none';
                 document.getElementById('vendorNameGRN').value = '';
                 document.getElementById('grnDate').valueAsDate = new Date();
+                document.getElementById('grnFromChallanDate').valueAsDate = new Date();
                 document.getElementById('challanRefNoManual').value = '';
                 document.getElementById('grnItemsContainer').innerHTML = '';
-                document.getElementById('challanSelect').value = '';
+                document.getElementById('challanSearch').value = '';
                 document.getElementById('selectedChallanDetails').innerHTML = '';
                 document.getElementById('receiveGRNBtn').textContent = 'Receive GRN';
                 delete document.getElementById('receiveGRNBtn').dataset.docId;
@@ -1138,75 +1164,65 @@
                 createItemForm(document.getElementById('grnItemsContainer'), true, null, null);
             });
 
-            document.getElementById('challanSelect').addEventListener('change', async (e) => {
-                const challanId = e.target.value;
-                const detailsContainer = document.getElementById('selectedChallanDetails');
-                detailsContainer.innerHTML = '';
-
-                if (challanId) {
-                    showLoading();
-                    const challanDoc = await getDoc(doc(db, `/artifacts/${appId}/public/data/challans/${challanId}`));
-                    if (challanDoc.exists()) {
-                        const challan = challanDoc.data();
-
-                        const vendorNameDiv = document.createElement('div');
-                        vendorNameDiv.innerHTML = `<p><strong>Vendor:</strong> ${challan.vendorName}</p>`;
-                        detailsContainer.appendChild(vendorNameDiv);
-
-                        const itemsContainer = document.createElement('div');
-                        itemsContainer.classList.add('card', 'p-3', 'mb-3');
-                        itemsContainer.innerHTML = `<h5>Items for Challan No. ${challan.challanNo}</h5>`;
-
-                        challan.items.forEach((item, index) => {
-                            const itemRow = document.createElement('div');
-                            itemRow.classList.add('item-row', 'mb-3');
-                            itemRow.innerHTML = `
-                            <div class="row g-3">
-                                <div class="col-md-6 col-lg-3">
-                                    <label class="form-label">SKU Code</label>
-                                    <input type="text" class="form-control item-sku" value="${item.sku}" readonly>
-                                </div>
-                                <div class="col-md-6 col-lg-3">
-                                    <label class="form-label">Color</label>
-                                    <input type="text" class="form-control item-color" value="${item.color}" readonly>
-                                </div>
-                                <div class="col-md-6 col-lg-3">
-                                    <label class="form-label">Type</label>
-                                    <input type="text" class="form-control item-type" value="${item.type}" readonly>
-                                </div>
-                                <div class="col-md-6 col-lg-3">
-                                    <label class="form-label">Rate</label>
-                                    <input type="number" class="form-control item-rate" value="${item.rate}" step="0.01" readonly>
-                                </div>
-                                <div class="col-md-6 col-lg-3">
-                                    <label class="form-label">Remarks</label>
-                                    <input type="text" class="form-control item-remarks" value="${item.remarks}" readonly>
-                                </div>
-                            </div>
-                            <div class="mt-3">
-                                <label class="form-label">Size-wise Quantities</label>
-                                <div class="row g-2 size-qty-container">
-                                    ${Object.entries(item.sizes).map(([size, issuedQty]) => {
-                                let receivedQty = (challan.receivedItems[index].receivedSizes && challan.receivedItems[index].receivedSizes[size]) ? challan.receivedItems[index].receivedSizes[size] : 0;
-                                let remainingQty = issuedQty - receivedQty;
-                                return `
-                                        <div class="col-6 col-sm-4 col-md-2">
-                                            <label class="form-label">${size}</label>
-                                            <input type="number" class="form-control challan-qty-input" data-size="${size}" value="${remainingQty}" readonly title="Remaining to be received">
-                                            <input type="number" class="form-control grn-qty-input mt-1" data-size="${size}" placeholder="Rec Qty" value="0">
-                                        </div>
-                                    `;
-                            }).join('')}
-                                </div>
-                            </div>
-                        `;
-                            itemsContainer.appendChild(itemRow);
-                        });
-                        detailsContainer.appendChild(itemsContainer);
-                    }
-                    hideLoading();
+            document.getElementById('challanSearch').addEventListener('input', (e) => {
+                const value = e.target.value;
+                const option = document.querySelector(`#challanOptions option[value='${value}']`);
+                document.getElementById('selectedChallanDetails').innerHTML = '';
+                if (option) {
+                    const challanId = option.dataset.id;
+                    displaySelectedChallanDetails(challanId);
                 }
             });
+
+            async function displaySelectedChallanDetails(challanId) {
+                const detailsContainer = document.getElementById('selectedChallanDetails');
+                detailsContainer.innerHTML = '';
+                if (!challanId) return;
+
+                showLoading();
+                const challanDoc = await getDoc(doc(db, `/artifacts/${appId}/public/data/challans/${challanId}`));
+                if (challanDoc.exists()) {
+                    const challan = challanDoc.data();
+                    const vendorNameDiv = document.createElement('div');
+                    vendorNameDiv.innerHTML = `<p><strong>Vendor:</strong> ${challan.vendorName}</p>`;
+                    detailsContainer.appendChild(vendorNameDiv);
+
+                    const itemsContainer = document.createElement('div');
+                    itemsContainer.classList.add('card', 'p-3', 'mb-3');
+                    itemsContainer.innerHTML = `<h5>Items for Challan No. ${challan.challanNo}</h5>`;
+
+                    challan.items.forEach((item, index) => {
+                        const itemRow = document.createElement('div');
+                        itemRow.classList.add('item-row', 'mb-3');
+                        let sizeHtml = Object.entries(item.sizes).map(([size, issuedQty]) => {
+                            let receivedQty = 0;
+                            if (challan.receivedItems && challan.receivedItems[index] && challan.receivedItems[index].receivedSizes) {
+                                receivedQty = challan.receivedItems[index].receivedSizes[size] || 0;
+                            }
+                            let remainingQty = issuedQty - receivedQty;
+                            return `
+                                <div class="col-6 col-sm-4 col-md-2">
+                                    <label class="form-label">${size}</label>
+                                    <input type="number" class="form-control challan-qty-input" data-size="${size}" value="${remainingQty}" readonly title="Remaining to be received">
+                                    <input type="number" class="form-control grn-qty-input mt-1" data-size="${size}" placeholder="Rec Qty" value="0">
+                                </div>`;
+                        }).join('');
+
+                        itemRow.innerHTML = `
+                            <div class="row g-3">
+                                <div class="col-md-6"><label class="form-label">SKU Code</label><input type="text" class="form-control item-sku" value="${item.sku}" readonly></div>
+                                <div class="col-md-6"><label class="form-label">Color</label><input type="text" class="form-control item-color" value="${item.color}" readonly></div>
+                                <div class="col-md-6"><label class="form-label">Type</label><input type="text" class="form-control item-type" value="${item.type}" readonly></div>
+                                <div class="col-md-6"><label class="form-label">Rate</label><input type="number" class="form-control item-rate" value="${item.rate}" step="0.01" readonly></div>
+                            </div>
+                            <div class="mt-3"><label class="form-label">Size-wise Quantities</label><div class="row g-2 size-qty-container">${sizeHtml}</div></div>`;
+                        itemsContainer.appendChild(itemRow);
+                    });
+                    detailsContainer.appendChild(itemsContainer);
+                }
+                hideLoading();
+            }
+
 
             document.getElementById('receiveGRNBtn').addEventListener('click', async (e) => {
                 const docId = e.target.dataset.docId;
@@ -1217,9 +1233,14 @@
                     let grnData = {};
 
                     if (grnType === 'fromChallan') {
-                        const challanId = document.getElementById('challanSelect').value;
-                        if (!challanId) {
-                            console.error("Please select a challan.");
+                        const challanSearchInput = document.getElementById('challanSearch');
+                        const selectedOption = document.querySelector(`#challanOptions option[value='${challanSearchInput.value}']`);
+                        const challanId = selectedOption ? selectedOption.dataset.id : null;
+                        
+                        const date = document.getElementById('grnFromChallanDate').value;
+
+                        if (!challanId || !date) {
+                            console.error("Please select a valid challan from the list and a date.");
                             return;
                         }
                         const challanDocRef = doc(db, `/artifacts/${appId}/public/data/challans/${challanId}`);
@@ -1232,7 +1253,7 @@
 
                         const grnItems = [];
                         let anyReceived = false;
-                        const newReceivedItems = JSON.parse(JSON.stringify(challan.receivedItems));
+                        const newReceivedItems = challan.receivedItems ? JSON.parse(JSON.stringify(challan.receivedItems)) : challan.items.map(i => ({...i, receivedSizes: {}}));
 
                         document.querySelectorAll('#selectedChallanDetails .item-row').forEach((row, itemIndex) => {
                             const receivedSizes = {};
@@ -1249,7 +1270,7 @@
                                 color: row.querySelector('.item-color').value,
                                 type: row.querySelector('.item-type').value,
                                 rate: parseFloat(row.querySelector('.item-rate').value),
-                                remarks: row.querySelector('.item-remarks').value,
+                                remarks: challan.items[itemIndex].remarks,
                                 receivedSizes: receivedSizes
                             });
                         });
@@ -1267,7 +1288,7 @@
                             grnNo: generateNextGrnNumber(lastGrnNumber),
                             challanRefNo: challan.challanNo,
                             vendorName: challan.vendorName,
-                            date: new Date().toISOString().split('T')[0],
+                            date: date,
                             items: grnItems,
                             createdAt: new Date().toISOString()
                         };
@@ -1392,11 +1413,18 @@
             let completedChallans = 0;
             let totalIssuedQty = 0;
             let totalReceivedQty = 0;
+            let totalIssuedAmount = 0;
 
             filteredChallans.forEach(data => {
                 if (data.status === 'Pending' || data.status === 'Partially Received') pendingChallans++;
                 if (data.status === 'Completed') completedChallans++;
-                totalIssuedQty += data.items.reduce((sum, item) => sum + Object.values(item.sizes).reduce((s, q) => s + q, 0), 0);
+                
+                data.items.forEach(item => {
+                    const itemQty = Object.values(item.sizes).reduce((s, q) => s + q, 0);
+                    totalIssuedQty += itemQty;
+                    totalIssuedAmount += itemQty * (item.rate || 0);
+                });
+
                 if (data.receivedItems) {
                      totalReceivedQty += data.receivedItems.reduce((sum, item) => sum + Object.values(item.receivedSizes).reduce((s, q) => s + q, 0), 0);
                 }
@@ -1408,6 +1436,7 @@
             document.getElementById('completedChallans').textContent = completedChallans;
             document.getElementById('totalIssuedQty').textContent = totalIssuedQty;
             document.getElementById('totalReceivedQty').textContent = totalReceivedQty;
+            document.getElementById('totalIssuedAmount').textContent = `₹${totalIssuedAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
         }
 
         function calculateAndDisplayVendorPending(filteredChallans) {
@@ -1417,7 +1446,7 @@
                     vendorData[challan.vendorName] = { issued: 0, received: 0 };
                 }
                 const issued = challan.items.reduce((sum, item) => sum + Object.values(item.sizes).reduce((s, q) => s + q, 0), 0);
-                const received = challan.receivedItems.reduce((sum, item) => sum + Object.values(item.receivedSizes).reduce((s, q) => s + q, 0), 0);
+                const received = (challan.receivedItems || []).reduce((sum, item) => sum + Object.values(item.receivedSizes).reduce((s, q) => s + q, 0), 0);
                 vendorData[challan.vendorName].issued += issued;
                 vendorData[challan.vendorName].received += received;
             });
@@ -1447,14 +1476,15 @@
             challans.sort((a, b) => new Date(b.date) - new Date(a.date));
 
             if (challans.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="9" class="text-center">No records found for the selected filters.</td></tr>';
+                tableBody.innerHTML = '<tr><td colspan="10" class="text-center">No records found for the selected filters.</td></tr>';
                 return;
             }
 
             challans.forEach(record => {
                 const totalIssuedQty = record.items.reduce((sum, item) => sum + Object.values(item.sizes).reduce((s, q) => s + q, 0), 0);
-                const totalReceivedQty = record.receivedItems.reduce((sum, item) => sum + Object.values(item.receivedSizes).reduce((s, q) => s + q, 0), 0);
+                const totalReceivedQty = (record.receivedItems || []).reduce((sum, item) => sum + Object.values(item.receivedSizes).reduce((s, q) => s + q, 0), 0);
                 const progress = totalIssuedQty > 0 ? (totalReceivedQty / totalIssuedQty) * 100 : 0;
+                const skus = [...new Set(record.items.map(item => item.sku))].join(', ');
 
                 let completionDate = 'N/A';
                 if (record.status === 'Completed') {
@@ -1479,12 +1509,15 @@
                     </div>
                 `;
                 const row = document.createElement('tr');
+                row.dataset.id = record.id;
+                row.dataset.type = 'challan';
                 row.innerHTML = `
                     <td>${record.challanNo}</td>
                     <td>${record.vendorName}</td>
                     <td>${record.date}</td>
                     <td>${completionDate}</td>
                     <td>${record.items.length}</td>
+                    <td class="sku-cell" title="${skus}">${skus}</td>
                     <td>${totalIssuedQty}</td>
                     <td>${totalReceivedQty}</td>
                     <td>${statusHtml}</td>
@@ -1506,13 +1539,16 @@
             grns.sort((a, b) => new Date(b.date) - new Date(a.date));
             
             if (grns.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="7" class="text-center">No records found for the selected filters.</td></tr>';
+                tableBody.innerHTML = '<tr><td colspan="8" class="text-center">No records found for the selected filters.</td></tr>';
                 return;
             }
 
             grns.forEach(record => {
                 const row = document.createElement('tr');
+                row.dataset.id = record.id;
+                row.dataset.type = 'grn';
                 const totalQty = record.items.reduce((sum, item) => sum + Object.values(item.receivedSizes).reduce((s, q) => s + q, 0), 0);
+                const skus = [...new Set(record.items.map(item => item.sku))].join(', ');
 
                 row.innerHTML = `
                     <td>${record.grnNo}</td>
@@ -1520,6 +1556,7 @@
                     <td>${record.vendorName}</td>
                     <td>${record.date}</td>
                     <td>${record.items.length}</td>
+                    <td class="sku-cell" title="${skus}">${skus}</td>
                     <td>${totalQty}</td>
                     <td>
                         <button class="btn btn-sm btn-info text-white print-btn" data-id="${record.id}" data-type="grn" data-with-rate="false">Print</button>
@@ -1532,34 +1569,85 @@
             });
         }
 
-        document.getElementById('challan-records').addEventListener('click', (e) => handleRecordAction(e));
-        document.getElementById('grn-records').addEventListener('click', (e) => handleRecordAction(e));
+        document.getElementById('challanRecordsTableBody').addEventListener('click', (e) => handleRecordAction(e));
+        document.getElementById('grnRecordsTableBody').addEventListener('click', (e) => handleRecordAction(e));
         
         function handleRecordAction(e) {
-             const target = e.target.closest('button');
-            if (!target) return;
+            const target = e.target;
+            const button = target.closest('button');
 
-            const recordId = target.dataset.id;
-            const recordType = target.dataset.type;
-
-            if (target.classList.contains('print-btn')) {
-                const withRate = target.dataset.withRate === 'true';
-                let docRef = doc(db, `/artifacts/${appId}/public/data/${recordType}s/${recordId}`);
-                getDoc(docRef).then(docSnap => {
-                    if (docSnap.exists()) {
-                        populatePrintArea(docSnap.data(), recordType, withRate);
+            if (button) { // If a button inside the row was clicked
+                const recordId = button.dataset.id;
+                const recordType = button.dataset.type;
+                if (button.classList.contains('print-btn')) {
+                    const withRate = button.dataset.withRate === 'true';
+                    let docRef = doc(db, `/artifacts/${appId}/public/data/${recordType}s/${recordId}`);
+                    getDoc(docRef).then(docSnap => {
+                        if (docSnap.exists()) populatePrintArea(docSnap.data(), recordType, withRate);
+                    });
+                } else if (button.classList.contains('delete-btn')) {
+                    if(confirm(`Are you sure you want to delete this ${recordType}?`)) {
+                        if (recordType === 'challan') deleteChallan(recordId);
+                        else if (recordType === 'grn') deleteGRN(recordId);
                     }
-                });
-            } else if (target.classList.contains('delete-btn')) {
-                if(confirm(`Are you sure you want to delete this ${recordType}?`)) {
-                    if (recordType === 'challan') deleteChallan(recordId);
-                    else if (recordType === 'grn') deleteGRN(recordId);
+                } else if (button.classList.contains('edit-btn')) {
+                    if (recordType === 'challan') editChallan(recordId);
+                    else if (recordType === 'grn') editGRN(recordId);
                 }
-            } else if (target.classList.contains('edit-btn')) {
-                if (recordType === 'challan') editChallan(recordId);
-                else if (recordType === 'grn') editGRN(recordId);
+            } else if (target.closest('td')) { // If a cell (but not a button) was clicked
+                const row = target.closest('tr');
+                if (row.dataset.id && row.dataset.type) {
+                    showRecordDetailsInModal(row.dataset.id, row.dataset.type);
+                }
             }
         }
+
+        async function showRecordDetailsInModal(recordId, recordType) {
+            showLoading();
+            const docRef = doc(db, `/artifacts/${appId}/public/data/${recordType}s/${recordId}`);
+            try {
+                const docSnap = await getDoc(docRef);
+                if (!docSnap.exists()) {
+                    console.error("Document not found!");
+                    return;
+                }
+                const data = docSnap.data();
+                const modalTitle = document.getElementById('recordDetailsModalLabel');
+                const modalBody = document.getElementById('recordDetailsModalBody');
+                let tableHtml = '';
+
+                if(recordType === 'challan') {
+                    modalTitle.textContent = `Challan Details: ${data.challanNo}`;
+                    tableHtml = `<table class="table table-bordered"><thead><tr><th>SKU</th><th>Color</th><th>Type</th><th>Size</th><th>Qty Issued</th></tr></thead><tbody>`;
+                    data.items.forEach(item => {
+                        Object.entries(item.sizes).forEach(([size, qty]) => {
+                            if (qty > 0) {
+                                tableHtml += `<tr><td>${item.sku}</td><td>${item.color}</td><td>${item.type}</td><td>${size}</td><td>${qty}</td></tr>`;
+                            }
+                        });
+                    });
+                    tableHtml += `</tbody></table>`;
+                } else { // GRN
+                    modalTitle.textContent = `GRN Details: ${data.grnNo}`;
+                    tableHtml = `<table class="table table-bordered"><thead><tr><th>SKU</th><th>Color</th><th>Type</th><th>Size</th><th>Qty Received</th></tr></thead><tbody>`;
+                    data.items.forEach(item => {
+                        Object.entries(item.receivedSizes).forEach(([size, qty]) => {
+                            if (qty > 0) {
+                                tableHtml += `<tr><td>${item.sku}</td><td>${item.color}</td><td>${item.type}</td><td>${size}</td><td>${qty}</td></tr>`;
+                            }
+                        });
+                    });
+                    tableHtml += `</tbody></table>`;
+                }
+                modalBody.innerHTML = tableHtml;
+                detailsModal.show();
+            } catch (error) {
+                console.error("Error fetching record for modal:", error);
+            } finally {
+                hideLoading();
+            }
+        }
+
 
         function exportRecordsAsCSV() {
             const activeTabPane = document.querySelector('.tab-pane.active.show');
@@ -1595,8 +1683,11 @@
         window.onload = async () => {
             await authenticateUser();
             await getDocumentCounters();
+            detailsModal = new bootstrap.Modal(document.getElementById('recordDetailsModal'));
             document.getElementById('challanNo').value = generateNextChallanNumber(lastChallanNumber);
             document.getElementById('challanDate').valueAsDate = new Date();
+            document.getElementById('grnFromChallanDate').valueAsDate = new Date();
+            document.getElementById('grnDate').valueAsDate = new Date();
             createItemForm(document.getElementById('challanItemsContainer'));
             setupListeners();
             fetchChallansForGRN();
@@ -1644,4 +1735,5 @@
         </div>
     </div>
 </body>
-</html>
+
+</html
