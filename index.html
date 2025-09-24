@@ -1196,6 +1196,7 @@
                         itemRow.classList.add('item-row', 'mb-3');
                         let sizeHtml = Object.entries(item.sizes).map(([size, issuedQty]) => {
                             let receivedQty = 0;
+                            // **ERROR FIX**: Added defensive checks for challan.receivedItems and challan.receivedItems[index]
                             if (challan.receivedItems && challan.receivedItems[index] && challan.receivedItems[index].receivedSizes) {
                                 receivedQty = challan.receivedItems[index].receivedSizes[size] || 0;
                             }
@@ -1253,7 +1254,7 @@
 
                         const grnItems = [];
                         let anyReceived = false;
-                        const newReceivedItems = challan.receivedItems ? JSON.parse(JSON.stringify(challan.receivedItems)) : challan.items.map(i => ({...i, receivedSizes: {}}));
+                        const newReceivedItems = challan.receivedItems ? JSON.parse(JSON.stringify(challan.receivedItems)) : challan.items.map(item => ({ sku: item.sku, color: item.color, type: item.type, rate: item.rate, remarks: item.remarks, receivedSizes: {} }));
 
                         document.querySelectorAll('#selectedChallanDetails .item-row').forEach((row, itemIndex) => {
                             const receivedSizes = {};
@@ -1262,7 +1263,9 @@
                                 if (qty > 0) {
                                     receivedSizes[input.dataset.size] = qty;
                                     anyReceived = true;
-                                    newReceivedItems[itemIndex].receivedSizes[input.dataset.size] = (newReceivedItems[itemIndex].receivedSizes[input.dataset.size] || 0) + qty;
+                                    if(newReceivedItems[itemIndex]) {
+                                       newReceivedItems[itemIndex].receivedSizes[input.dataset.size] = (newReceivedItems[itemIndex].receivedSizes[input.dataset.size] || 0) + qty;
+                                    }
                                 }
                             });
                             grnItems.push({
@@ -1508,6 +1511,14 @@
                         <div class="progress-bar-fill bg-success" style="width: ${progress}%;"></div>
                     </div>
                 `;
+                
+                let actionButtons = '';
+                if (record.status === 'Completed') {
+                     actionButtons = `<button class="btn btn-sm btn-primary consolidate-grn-btn" data-id="${record.id}">Consolidate GRN</button>`;
+                } else {
+                     actionButtons = `<button class="btn btn-sm btn-success receive-full-btn" data-id="${record.id}">Receive Full</button>`;
+                }
+
                 const row = document.createElement('tr');
                 row.dataset.id = record.id;
                 row.dataset.type = 'challan';
@@ -1521,9 +1532,10 @@
                     <td>${totalIssuedQty}</td>
                     <td>${totalReceivedQty}</td>
                     <td>${statusHtml}</td>
-                    <td>
+                    <td class="text-nowrap">
+                        ${actionButtons}
                         <button class="btn btn-sm btn-info text-white print-btn" data-id="${record.id}" data-type="challan" data-with-rate="false">Print</button>
-                        <button class="btn btn-sm btn-info text-white print-btn" data-id="${record.id}" data-type="challan" data-with-rate="true">Print with Rate</button>
+                        <button class="btn btn-sm btn-info text-white print-btn" data-id="${record.id}" data-type="challan" data-with-rate="true">Print w/ Rate</button>
                         <button class="btn btn-sm btn-warning edit-btn" data-id="${record.id}" data-type="challan">Edit</button>
                         <button class="btn btn-sm btn-danger delete-btn" data-id="${record.id}" data-type="challan">Delete</button>
                     </td>
@@ -1572,6 +1584,114 @@
         document.getElementById('challanRecordsTableBody').addEventListener('click', (e) => handleRecordAction(e));
         document.getElementById('grnRecordsTableBody').addEventListener('click', (e) => handleRecordAction(e));
         
+        async function receiveFullChallan(challanId) {
+            if (!confirm('Are you sure you want to receive all remaining items for this challan? This action cannot be undone.')) return;
+            
+            showLoading();
+            const challanDocRef = doc(db, `/artifacts/${appId}/public/data/challans/${challanId}`);
+            try {
+                const challanDoc = await getDoc(challanDocRef);
+                if (!challanDoc.exists() || challanDoc.data().status === 'Completed') {
+                    alert('This challan is already completed or does not exist.');
+                    hideLoading();
+                    return;
+                }
+                const challan = challanDoc.data();
+
+                const grnItems = challan.items.map((item, index) => {
+                    const remainingSizes = {};
+                    const alreadyReceivedSizes = (challan.receivedItems && challan.receivedItems[index]) ? challan.receivedItems[index].receivedSizes : {};
+                    for (const size in item.sizes) {
+                        const issuedQty = item.sizes[size] || 0;
+                        const receivedQty = alreadyReceivedSizes[size] || 0;
+                        const remaining = issuedQty - receivedQty;
+                        if (remaining > 0) remainingSizes[size] = remaining;
+                    }
+                    return { ...item, receivedSizes: remainingSizes };
+                }).filter(item => Object.keys(item.receivedSizes).length > 0);
+
+                if (grnItems.length === 0) {
+                    alert('No remaining items to receive. Updating status to Completed.');
+                    await updateDoc(challanDocRef, { status: 'Completed' });
+                    hideLoading();
+                    return;
+                }
+                
+                const newGrnNumber = generateNextGrnNumber(lastGrnNumber);
+                const grnData = {
+                    grnNo: newGrnNumber,
+                    challanRefNo: challan.challanNo,
+                    vendorName: challan.vendorName,
+                    date: new Date().toISOString().split('T')[0],
+                    items: grnItems,
+                    createdAt: new Date().toISOString()
+                };
+
+                await addDoc(getGrnCollectionRef(), grnData);
+                await updateGrnCounter(newGrnNumber);
+
+                const fullyReceivedItems = challan.items.map(item => ({...item, receivedSizes: { ...item.sizes }}));
+                await updateDoc(challanDocRef, { status: 'Completed', receivedItems: fullyReceivedItems });
+                
+                alert(`GRN ${newGrnNumber} created successfully and challan has been marked as complete.`);
+
+            } catch(error) {
+                console.error("Error during full receive process:", error);
+                alert("An error occurred. Please check the console for details.");
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function consolidateGrnForChallan(challanId) {
+            if (!confirm('This will DELETE all existing GRNs for this challan and create ONE final, consolidated GRN. This action is irreversible. Are you sure?')) return;
+
+            showLoading();
+            const challanDocRef = doc(db, `/artifacts/${appId}/public/data/challans/${challanId}`);
+            try {
+                const challanDoc = await getDoc(challanDocRef);
+                 if (!challanDoc.exists() || challanDoc.data().status !== 'Completed') {
+                    alert('This challan is not completed or does not exist.');
+                    hideLoading();
+                    return;
+                }
+                const challan = challanDoc.data();
+
+                // Find all GRNs to delete
+                const q = query(getGrnCollectionRef(), where("challanRefNo", "==", challan.challanNo));
+                const grnSnapshot = await getDocs(q);
+                const idsToDelete = grnSnapshot.docs.map(d => d.id);
+                
+                // Create the new consolidated GRN
+                const newGrnNumber = generateNextGrnNumber(lastGrnNumber);
+                const consolidatedGrnData = {
+                    grnNo: newGrnNumber,
+                    challanRefNo: challan.challanNo,
+                    vendorName: challan.vendorName,
+                    date: new Date().toISOString().split('T')[0],
+                    items: challan.receivedItems, 
+                    createdAt: new Date().toISOString(),
+                    isConsolidated: true
+                };
+
+                await addDoc(getGrnCollectionRef(), consolidatedGrnData);
+                await updateGrnCounter(newGrnNumber);
+                
+                // Delete old GRNs after successful creation of the new one
+                for (const id of idsToDelete) {
+                    await deleteDoc(doc(db, `/artifacts/${appId}/public/data/grns/${id}`));
+                }
+
+                alert(`Successfully deleted ${idsToDelete.length} old GRN(s) and created consolidated GRN ${newGrnNumber}.`);
+
+            } catch (error) {
+                console.error("Error during GRN consolidation:", error);
+                alert("An error occurred during consolidation. Please check the console.");
+            } finally {
+                hideLoading();
+            }
+        }
+
         function handleRecordAction(e) {
             const target = e.target;
             const button = target.closest('button');
@@ -1593,6 +1713,10 @@
                 } else if (button.classList.contains('edit-btn')) {
                     if (recordType === 'challan') editChallan(recordId);
                     else if (recordType === 'grn') editGRN(recordId);
+                } else if (button.classList.contains('receive-full-btn')) {
+                    receiveFullChallan(recordId);
+                } else if (button.classList.contains('consolidate-grn-btn')) {
+                    consolidateGrnForChallan(recordId);
                 }
             } else if (target.closest('td')) { // If a cell (but not a button) was clicked
                 const row = target.closest('tr');
@@ -1735,5 +1859,4 @@
         </div>
     </div>
 </body>
-
-</html
+</html>
